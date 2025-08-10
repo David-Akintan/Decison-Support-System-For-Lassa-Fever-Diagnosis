@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assessment Results - Lassa Fever Decision Support</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .results-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            margin: 2rem auto;
+            max-width: 1000px;
+        }
+        .results-header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            border-radius: 20px 20px 0 0;
+            padding: 2rem;
+            text-align: center;
+        }
+        .diagnosis-card {
+            border-radius: 15px;
+            padding: 2rem;
+            margin: 2rem 0;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        .diagnosis-positive {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+        }
+        .diagnosis-negative {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+        }
+        .risk-badge {
+            font-size: 1.2rem;
+            padding: 0.5rem 1.5rem;
+            border-radius: 25px;
+            font-weight: 600;
+        }
+        .probability-bar {
+            height: 30px;
+            border-radius: 15px;
+            background: #e9ecef;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+        .probability-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #27ae60 0%, #f39c12 50%, #e74c3c 100%);
+            transition: width 0.8s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+        .info-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        .symptom-chip {
+            display: inline-block;
+            background: #3498db;
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            margin: 0.2rem;
+            font-size: 0.9rem;
+        }
+        .btn-action {
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-weight: 600;
+            margin: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="results-container">
+            <!-- Header -->
+            <div class="results-header">
+                <h2 class="mb-3">
+                    <i class="fas fa-chart-line me-3"></i>
+                    Assessment Results
+                </h2>
+                <p class="mb-0">AI-powered Lassa fever risk analysis completed</p>
+                <small class="d-block mt-2">{{ interpretation.timestamp }}</small>
+            </div>
+
+            <!-- Main Results -->
+            <div class="p-4">
+                <!-- Primary Diagnosis -->
+                <div class="diagnosis-card {% if result.prediction == 1 %}diagnosis-positive{% else %}diagnosis-negative{% endif %}">
+                    <h3 class="mb-3">
+                        <i class="fas fa-{% if result.prediction == 1 %}exclamation-triangle{% else %}check-circle{% endif %} me-3"></i>
+                        {{ interpretation.diagnosis }}
+                    </h3>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Risk Level</h5>
+                            <span class="badge bg-{{ interpretation.risk_color }} risk-badge">
+                                {{ interpretation.risk_level }}
+                            </span>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Lassa Probability</h5>
+                            <h2 class="mb-0">{{ interpretation.lassa_probability_percent }}%</h2>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Probability Visualization -->
+                <div class="info-card">
+                    <h5 class="mb-3"><i class="fas fa-chart-bar me-2"></i>Risk Probability</h5>
+                    <div class="probability-bar">
+                        <div class="probability-fill" style="width: '{{ interpretation.lassa_probability_percent }}%'">
+                            {{ interpretation.lassa_probability_percent }}%
+                        </div>
+                    </div>
+                    <div class="row text-center mt-3">
+                        <div class="col-4">
+                            <small class="text-success fw-bold">0% - Low Risk</small>
+                        </div>
+                        <div class="col-4">
+                            <small class="text-warning fw-bold">30% - Moderate Risk</small>
+                        </div>
+                        <div class="col-4">
+                            <small class="text-danger fw-bold">70% - High Risk</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Clinical Recommendation -->
+                <div class="info-card">
+                    <h5 class="mb-3">
+                        <i class="fas fa-user-md me-2"></i>Clinical Recommendation
+                    </h5>
+                    <div class="alert alert-{{ interpretation.risk_color }}" role="alert">
+                        <h6 class="alert-heading">Recommended Action:</h6>
+                        <p class="mb-0">{{ interpretation.recommendation }}</p>
+                    </div>
+                </div>
+
+                <!-- Key Symptoms Present -->
+                {% if interpretation.key_symptoms %}
+                <div class="info-card">
+                    <h5 class="mb-3">
+                        <i class="fas fa-list-check me-2"></i>Key Symptoms Present
+                    </h5>
+                    <div>
+                        {% for symptom in interpretation.key_symptoms %}
+                            <span class="symptom-chip">{{ symptom }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Model Confidence -->
+                <div class="info-card">
+                    <h5 class="mb-3"><i class="fas fa-brain me-2"></i>AI Model Details</h5>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="text-center">
+                                <h6 class="text-muted">Model Confidence</h6>
+                                <h4 class="text-primary">{{ interpretation.confidence_percent }}%</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center">
+                                <h6 class="text-muted">Architecture</h6>
+                                <h6 class="text-dark">Hybrid GNN</h6>
+                                <small class="text-muted">GCN + GAT</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center">
+                                <h6 class="text-muted">Features Analyzed</h6>
+                                <h4 class="text-info">51</h4>
+                                <small class="text-muted">Clinical parameters</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Patient Summary -->
+                <div class="info-card">
+                    <h5 class="mb-3"><i class="fas fa-user me-2"></i>Patient Summary</h5>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <strong>Age:</strong> {{ patient_data.age_recode }} years
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Sex:</strong> {% if patient_data.sex_new2 == 1 %}Male{% else %}Female{% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <strong>State:</strong> {{ patient_data.State_new }}
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Contact History:</strong> {% if patient_data.contact_with_lassa_case == 1 %}Yes{% else %}No{% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Important Disclaimers -->
+                <div class="alert alert-warning" role="alert">
+                    <h6 class="alert-heading">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Important Medical Disclaimer
+                    </h6>
+                    <ul class="mb-0">
+                        <li>This AI assessment is a <strong>decision support tool</strong> only</li>
+                        <li>Clinical judgment and confirmatory testing are required for diagnosis</li>
+                        <li>Follow established medical protocols and consult specialists</li>
+                        <li>Consider patient history, physical examination, and laboratory results</li>
+                    </ul>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="text-center mt-4">
+                    <a href="{{ url_for('patient_form') }}" class="btn btn-primary btn-action">
+                        <i class="fas fa-plus me-2"></i>New Assessment
+                    </a>
+                    <a href="{{ url_for('index') }}" class="btn btn-outline-secondary btn-action">
+                        <i class="fas fa-home me-2"></i>Dashboard
+                    </a>
+                    <button onclick="window.print()" class="btn btn-outline-info btn-action">
+                        <i class="fas fa-print me-2"></i>Print Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Animate probability bar on load
+        document.addEventListener('DOMContentLoaded', function() {
+            const probabilityFill = document.querySelector('.probability-fill');
+            if (probabilityFill) {
+                const targetWidth = probabilityFill.style.width;
+                probabilityFill.style.width = '0%';
+                setTimeout(() => {
+                    probabilityFill.style.width = targetWidth;
+                }, 500);
+            }
+        });
+    </script>
+</body>
+</html>

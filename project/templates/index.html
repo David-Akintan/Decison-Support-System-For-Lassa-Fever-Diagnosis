@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lassa Fever Decision Support System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .main-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            margin-top: 2rem;
+            margin-bottom: 2rem;
+        }
+        .hero-section {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            border-radius: 20px 20px 0 0;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+        .feature-card {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            margin: 1rem 0;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: none;
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #3498db;
+        }
+        .btn-primary-custom {
+            background: linear-gradient(135deg, #3498db 0%, #2c3e50 100%);
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-primary-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(52, 152, 219, 0.3);
+        }
+        .stats-card {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="main-container">
+            <!-- Hero Section -->
+            <div class="hero-section">
+                <h1 class="display-4 fw-bold mb-4">
+                    <i class="fas fa-heartbeat me-3"></i>
+                    Lassa Fever Decision Support System
+                </h1>
+                <p class="lead mb-4">
+                    Advanced AI-powered diagnostic assistance using Hybrid Graph Neural Networks
+                </p>
+                <p class="mb-0">
+                    <i class="fas fa-shield-alt me-2"></i>
+                    Helping healthcare professionals make informed decisions with cutting-edge machine learning
+                </p>
+            </div>
+
+            <!-- Main Content -->
+            <div class="p-4">
+                <!-- Quick Actions -->
+                <div class="row mb-5">
+                    <div class="col-md-6 mb-3">
+                        <div class="feature-card text-center">
+                            <div class="feature-icon">
+                                <i class="fas fa-user-md"></i>
+                            </div>
+                            <h4 class="mb-3">New Patient Assessment</h4>
+                            <p class="text-muted mb-4">
+                                Input patient symptoms and clinical data for AI-powered Lassa fever risk assessment
+                            </p>
+                            <a href="{{ url_for('patient_form') }}" class="btn btn-primary-custom btn-lg">
+                                <i class="fas fa-plus-circle me-2"></i>
+                                Start Assessment
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="feature-card text-center">
+                            <div class="feature-icon">
+                                <i class="fas fa-brain"></i>
+                            </div>
+                            <h4 class="mb-3">Model Information</h4>
+                            <p class="text-muted mb-4">
+                                View AI model details, performance metrics, and system status
+                            </p>
+                            <a href="{{ url_for('model_info') }}" class="btn btn-outline-primary btn-lg">
+                                <i class="fas fa-info-circle me-2"></i>
+                                View Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- System Features -->
+                <div class="row mb-5">
+                    <div class="col-12">
+                        <h3 class="text-center mb-4">System Capabilities</h3>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="feature-card text-center h-100">
+                            <div class="feature-icon text-success">
+                                <i class="fas fa-network-wired"></i>
+                            </div>
+                            <h5>Hybrid GNN Architecture</h5>
+                            <p class="text-muted small">
+                                Combines Graph Convolutional Networks (GCN) and Graph Attention Networks (GAT) for superior performance
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="feature-card text-center h-100">
+                            <div class="feature-icon text-warning">
+                                <i class="fas fa-balance-scale"></i>
+                            </div>
+                            <h5>Class Imbalance Handling</h5>
+                            <p class="text-muted small">
+                                Advanced techniques including SMOTE oversampling and enhanced class weighting for rare disease detection
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="feature-card text-center h-100">
+                            <div class="feature-icon text-info">
+                                <i class="fas fa-microscope"></i>
+                            </div>
+                            <h5>Clinical Focus</h5>
+                            <p class="text-muted small">
+                                Optimized for healthcare applications with medical-aware preprocessing and clinical interpretation
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Key Statistics -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h3 class="text-center mb-4">System Performance</h3>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="stats-card">
+                            <h3 class="mb-2">80-85%</h3>
+                            <p class="mb-0 small">Overall Accuracy</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="stats-card">
+                            <h3 class="mb-2">40-70%</h3>
+                            <p class="mb-0 small">Lassa Detection Rate</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="stats-card">
+                            <h3 class="mb-2">51</h3>
+                            <p class="mb-0 small">Clinical Features</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="stats-card">
+                            <h3 class="mb-2">20K+</h3>
+                            <p class="mb-0 small">Training Samples</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Important Notice -->
+                <div class="alert alert-warning" role="alert">
+                    <h5 class="alert-heading">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Important Medical Disclaimer
+                    </h5>
+                    <p class="mb-0">
+                        This system is designed as a <strong>decision support tool</strong> for healthcare professionals. 
+                        It should not replace clinical judgment or definitive diagnostic testing. Always consult with 
+                        qualified medical professionals and follow established clinical protocols.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

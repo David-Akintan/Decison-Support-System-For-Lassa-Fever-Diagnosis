@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Assessment - Lassa Fever Decision Support</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .form-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            margin: 2rem auto;
+            max-width: 900px;
+        }
+        .form-header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            border-radius: 20px 20px 0 0;
+            padding: 2rem;
+            text-align: center;
+        }
+        .section-header {
+            background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+            color: white;
+            padding: 1rem;
+            margin: 2rem -2rem 1rem -2rem;
+            border-radius: 10px;
+        }
+        .symptom-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        .symptom-card {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 1rem;
+            transition: all 0.3s ease;
+        }
+        .symptom-card:hover {
+            border-color: #3498db;
+            background: #e3f2fd;
+        }
+        .symptom-card.selected {
+            border-color: #e74c3c;
+            background: #ffebee;
+        }
+        .form-check-input:checked {
+            background-color: #e74c3c;
+            border-color: #e74c3c;
+        }
+        .btn-submit {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            border: none;
+            padding: 15px 40px;
+            border-radius: 25px;
+            font-weight: 600;
+            color: white;
+            font-size: 1.1rem;
+        }
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(39, 174, 96, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="form-container">
+            <!-- Header -->
+            <div class="form-header">
+                <h2 class="mb-3">
+                    <i class="fas fa-stethoscope me-3"></i>
+                    Patient Assessment Form
+                </h2>
+                <p class="mb-0">Enter patient clinical data for Lassa fever risk assessment</p>
+            </div>
+
+            <!-- Form Content -->
+            <div class="p-4">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ 'danger' if category == 'error' else 'info' }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <form method="POST" action="{{ url_for('predict') }}" id="patientForm">
+                    <!-- Demographics Section -->
+                    <div class="section-header">
+                        <h4 class="mb-0"><i class="fas fa-user me-2"></i>Demographics</h4>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <label for="age" class="form-label fw-bold">Age</label>
+                            <input type="number" class="form-control" id="age" name="age" min="0" max="120" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="sex" class="form-label fw-bold">Sex</label>
+                            <select class="form-select" id="sex" name="sex" required>
+                                <option value="">Select...</option>
+                                <option value="0">Female</option>
+                                <option value="1">Male</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="pregnancy" class="form-label fw-bold">Pregnancy (if applicable)</label>
+                            <select class="form-select" id="pregnancy" name="pregnancy">
+                                <option value="0">No/Not applicable</option>
+                                <option value="1">Yes</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Clinical Symptoms Section -->
+                    <div class="section-header">
+                        <h4 class="mb-0"><i class="fas fa-thermometer-half me-2"></i>Clinical Symptoms</h4>
+                    </div>
+                    
+                    <div class="symptom-grid mb-4">
+                        <div class="symptom-card">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="fever_new" name="fever_new" value="1">
+                                <label class="form-check-label fw-bold" for="fever_new">
+                                    <i class="fas fa-temperature-high text-danger me-2"></i>Fever
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="symptom-card">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="headache_new" name="headache_new" value="1">
+                                <label class="form-check-label fw-bold" for="headache_new">
+                                    <i class="fas fa-head-side-cough text-warning me-2"></i>Headache
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="symptom-card">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="vomiting_new" name="vomiting_new" value="1">
+                                <label class="form-check-label fw-bold" for="vomiting_new">
+                                    <i class="fas fa-dizzy text-info me-2"></i>Vomiting
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="symptom-card">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="bleeding_new" name="bleeding_new" value="1">
+                                <label class="form-check-label fw-bold" for="bleeding_new">
+                                    <i class="fas fa-tint text-danger me-2"></i>Bleeding
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="symptom-card">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="weakness_new" name="weakness_new" value="1">
+                                <label class="form-check-label fw-bold" for="weakness_new">
+                                    <i class="fas fa-tired text-secondary me-2"></i>Weakness
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="symptom-card">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="abdominal_pain" name="abdominal_pain" value="1">
+                                <label class="form-check-label fw-bold" for="abdominal_pain">
+                                    <i class="fas fa-hand-holding-medical text-warning me-2"></i>Abdominal Pain
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="symptom-card">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="diarrhea_new" name="diarrhea_new" value="1">
+                                <label class="form-check-label fw-bold" for="diarrhea_new">
+                                    <i class="fas fa-prescription-bottle text-info me-2"></i>Diarrhea
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="symptom-card">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="sore_throat" name="sore_throat" value="1">
+                                <label class="form-check-label fw-bold" for="sore_throat">
+                                    <i class="fas fa-head-side-virus text-danger me-2"></i>Sore Throat
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="symptom-card">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="cough_new" name="cough_new" value="1">
+                                <label class="form-check-label fw-bold" for="cough_new">
+                                    <i class="fas fa-lungs text-primary me-2"></i>Cough
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="symptom-card">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="backache_new" name="backache_new" value="1">
+                                <label class="form-check-label fw-bold" for="backache_new">
+                                    <i class="fas fa-user-injured text-warning me-2"></i>Back Pain
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="symptom-card">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="chest_pain" name="chest_pain" value="1">
+                                <label class="form-check-label fw-bold" for="chest_pain">
+                                    <i class="fas fa-heart text-danger me-2"></i>Chest Pain
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="symptom-card">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="difficulty_breathing" name="difficulty_breathing" value="1">
+                                <label class="form-check-label fw-bold" for="difficulty_breathing">
+                                    <i class="fas fa-lungs-virus text-danger me-2"></i>Difficulty Breathing
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="symptom-card">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="fatigue_weakness" name="fatigue_weakness" value="1">
+                                <label class="form-check-label fw-bold" for="fatigue_weakness">
+                                    <i class="fas fa-bed text-secondary me-2"></i>Fatigue
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="symptom-card">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="joint_pain_arthritis" name="joint_pain_arthritis" value="1">
+                                <label class="form-check-label fw-bold" for="joint_pain_arthritis">
+                                    <i class="fas fa-bone text-warning me-2"></i>Joint Pain
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="symptom-card">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="muscle_pain" name="muscle_pain" value="1">
+                                <label class="form-check-label fw-bold" for="muscle_pain">
+                                    <i class="fas fa-dumbbell text-info me-2"></i>Muscle Pain
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="symptom-card">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="nausea_new" name="nausea_new" value="1">
+                                <label class="form-check-label fw-bold" for="nausea_new">
+                                    <i class="fas fa-dizzy text-success me-2"></i>Nausea
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Epidemiological Factors Section -->
+                    <div class="section-header">
+                        <h4 class="mb-0"><i class="fas fa-globe-africa me-2"></i>Epidemiological Factors</h4>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <label for="contact_history" class="form-label fw-bold">Contact with Lassa Case</label>
+                            <select class="form-select" id="contact_history" name="contact_history">
+                                <option value="0">No</option>
+                                <option value="1">Yes</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="travel_history" class="form-label fw-bold">Recent Travel to Endemic Area</label>
+                            <select class="form-select" id="travel_history" name="travel_history">
+                                <option value="0">No</option>
+                                <option value="1">Yes</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="rodent_exposure" class="form-label fw-bold">Rodent/Excreta Exposure</label>
+                            <select class="form-select" id="rodent_exposure" name="rodent_exposure">
+                                <option value="0">No</option>
+                                <option value="1">Yes</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Geographic Information -->
+                    <div class="section-header">
+                        <h4 class="mb-0"><i class="fas fa-map-marker-alt me-2"></i>Geographic Information</h4>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label for="state" class="form-label fw-bold">State/Region</label>
+                            <select class="form-select" id="state" name="state">
+                                <option value="Unknown">Select State...</option>
+                                <option value="Edo">Edo</option>
+                                <option value="Ondo">Ondo</option>
+                                <option value="Bauchi">Bauchi</option>
+                                <option value="Taraba">Taraba</option>
+                                <option value="Ebonyi">Ebonyi</option>
+                                <option value="Plateau">Plateau</option>
+                                <option value="Kogi">Kogi</option>
+                                <option value="Nasarawa">Nasarawa</option>
+                                <option value="Benue">Benue</option>
+                                <option value="Kaduna">Kaduna</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="text-center mt-5">
+                        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary btn-lg me-3">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                        </a>
+                        <button type="submit" class="btn btn-submit btn-lg">
+                            <i class="fas fa-brain me-2"></i>Analyze Patient
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Add visual feedback for symptom selection
+        document.querySelectorAll('.symptom-card input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const card = this.closest('.symptom-card');
+                if (this.checked) {
+                    card.classList.add('selected');
+                } else {
+                    card.classList.remove('selected');
+                }
+            });
+        });
+
+        // Pregnancy validation based on gender
+        const sexSelect = document.getElementById('sex');
+        const pregnancySelect = document.getElementById('pregnancy');
+        
+        function validatePregnancy() {
+            const selectedSex = sexSelect.value;
+            
+            if (selectedSex === '1') { // Male selected
+                pregnancySelect.value = '0'; // Reset to No
+                pregnancySelect.disabled = true;
+                pregnancySelect.style.backgroundColor = '#f8f9fa';
+                
+                // Show tooltip or message
+                pregnancySelect.title = 'Pregnancy option disabled for male patients';
+            } else {
+                pregnancySelect.disabled = false;
+                pregnancySelect.style.backgroundColor = '';
+                pregnancySelect.title = '';
+            }
+        }
+        
+        // Add event listener for sex selection
+        sexSelect.addEventListener('change', validatePregnancy);
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', validatePregnancy);
+
+        // Form validation
+        document.getElementById('patientForm').addEventListener('submit', function(e) {
+            const age = document.getElementById('age').value;
+            const sex = document.getElementById('sex').value;
+            const pregnancy = document.getElementById('pregnancy').value;
+            
+            if (!age || !sex) {
+                e.preventDefault();
+                alert('Please fill in all required fields (Age and Sex).');
+                return false;
+            }
+            
+            // Double-check pregnancy validation
+            if (sex === '1' && pregnancy === '1') {
+                e.preventDefault();
+                alert('Error: Male patients cannot be marked as pregnant. Please correct the form.');
+                return false;
+            }
+            
+            // Show loading state
+            const submitBtn = document.querySelector('.btn-submit');
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Analyzing...';
+            submitBtn.disabled = true;
+        });
+    </script>
+</body>
+</html>

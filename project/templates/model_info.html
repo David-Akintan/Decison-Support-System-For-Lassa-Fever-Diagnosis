@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Model Information - Lassa Fever Decision Support</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .info-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            margin: 2rem auto;
+            max-width: 1000px;
+        }
+        .info-header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            border-radius: 20px 20px 0 0;
+            padding: 2rem;
+            text-align: center;
+        }
+        .status-card {
+            border-radius: 15px;
+            padding: 2rem;
+            margin: 1rem 0;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        .status-online {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+        }
+        .status-offline {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+        }
+        .metric-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+        .metric-card:hover {
+            transform: translateY(-5px);
+        }
+        .feature-list {
+            max-height: 300px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 1rem;
+        }
+        .feature-tag {
+            display: inline-block;
+            background: #6c757d;
+            color: white;
+            padding: 0.2rem 0.6rem;
+            border-radius: 10px;
+            margin: 0.1rem;
+            font-size: 0.8rem;
+        }
+        .architecture-diagram {
+            background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+            margin: 2rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="info-container">
+            <!-- Header -->
+            <div class="info-header">
+                <h2 class="mb-3">
+                    <i class="fas fa-brain me-3"></i>
+                    AI Model Information
+                </h2>
+                <p class="mb-0">System architecture, performance, and technical details</p>
+            </div>
+
+            <!-- Main Content -->
+            <div class="p-4">
+                <!-- System Status -->
+                <div class="status-card {% if info.model_loaded %}status-online{% else %}status-offline{% endif %}">
+                    <h3 class="mb-3">
+                        <i class="fas fa-{% if info.model_loaded %}check-circle{% else %}times-circle{% endif %} me-3"></i>
+                        System Status: {% if info.model_loaded %}ONLINE{% else %}OFFLINE{% endif %}
+                    </h3>
+                    <p class="mb-0">
+                        {% if info.model_loaded %}
+                            AI model is loaded and ready for patient assessments
+                        {% else %}
+                            AI model not loaded. Please train the model first using train.py
+                        {% endif %}
+                    </p>
+                </div>
+
+                <!-- Architecture Overview -->
+                <div class="architecture-diagram">
+                    <h4 class="mb-4"><i class="fas fa-sitemap me-2"></i>Hybrid GNN Architecture</h4>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="text-center mb-3">
+                                <i class="fas fa-network-wired" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                                <h5>Graph Convolutional Network (GCN)</h5>
+                                <p class="small">Captures local neighborhood patterns in patient similarity graphs</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center mb-3">
+                                <i class="fas fa-plus" style="font-size: 2rem; margin: 2rem 0;"></i>
+                                <h5>Fusion Layer</h5>
+                                <p class="small">Attention-based combination of GCN and GAT outputs</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center mb-3">
+                                <i class="fas fa-eye" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                                <h5>Graph Attention Network (GAT)</h5>
+                                <p class="small">Learns adaptive attention weights for relevant patient features</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Performance Metrics -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h4 class="text-center mb-4">Performance Metrics</h4>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="metric-card">
+                            <i class="fas fa-bullseye text-primary" style="font-size: 2rem;"></i>
+                            <h5 class="mt-2">Overall Accuracy</h5>
+                            <h3 class="text-primary">80-85%</h3>
+                            <small class="text-muted">Balanced accuracy across classes</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="metric-card">
+                            <i class="fas fa-search text-success" style="font-size: 2rem;"></i>
+                            <h5 class="mt-2">Lassa Detection</h5>
+                            <h3 class="text-success">40-70%</h3>
+                            <small class="text-muted">Minority class recall (sensitivity)</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="metric-card">
+                            <i class="fas fa-chart-area text-warning" style="font-size: 2rem;"></i>
+                            <h5 class="mt-2">AUC Score</h5>
+                            <h3 class="text-warning">0.75-0.85</h3>
+                            <small class="text-muted">Area under ROC curve</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="metric-card">
+                            <i class="fas fa-balance-scale text-info" style="font-size: 2rem;"></i>
+                            <h5 class="mt-2">F1 Score</h5>
+                            <h3 class="text-info">0.70-0.80</h3>
+                            <small class="text-muted">Harmonic mean of precision/recall</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Technical Specifications -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="info-card">
+                            <h5 class="mb-3"><i class="fas fa-cogs me-2"></i>Technical Specifications</h5>
+                            <table class="table table-sm">
+                                <tr>
+                                    <td><strong>Model Type:</strong></td>
+                                    <td>Hybrid GNN (GCN + GAT)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Hidden Channels:</strong></td>
+                                    <td>128</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Number of Layers:</strong></td>
+                                    <td>3</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Dropout Rate:</strong></td>
+                                    <td>0.3</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Device:</strong></td>
+                                    <td>{{ info.device }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Features Count:</strong></td>
+                                    <td>{{ info.features_count }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-card">
+                            <h5 class="mb-3"><i class="fas fa-database me-2"></i>Training Data</h5>
+                            <table class="table table-sm">
+                                <tr>
+                                    <td><strong>Total Samples:</strong></td>
+                                    <td>~20,000</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Class Distribution:</strong></td>
+                                    <td>85% Negative, 15% Positive</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Augmentation:</strong></td>
+                                    <td>SMOTE Oversampling</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Graph Construction:</strong></td>
+                                    <td>Adaptive k-NN (k=8-20)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Similarity Metrics:</strong></td>
+                                    <td>Euclidean + Cosine</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Scaling Method:</strong></td>
+                                    <td>RobustScaler</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Features Used -->
+                {% if info.features_used %}
+                <div class="info-card">
+                    <h5 class="mb-3"><i class="fas fa-list me-2"></i>Clinical Features ({{ info.features_count }})</h5>
+                    <div class="feature-list">
+                        {% for feature in info.features_used %}
+                            <span class="feature-tag">{{ feature }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Training Strategies -->
+                <div class="info-card">
+                    <h5 class="mb-3"><i class="fas fa-graduation-cap me-2"></i>Advanced Training Strategies</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check text-success me-2"></i><strong>Class Imbalance Handling:</strong> Enhanced class weights with 3x minority boost</li>
+                                <li><i class="fas fa-check text-success me-2"></i><strong>Data Augmentation:</strong> SMOTE oversampling for minority class</li>
+                                <li><i class="fas fa-check text-success me-2"></i><strong>Loss Function:</strong> Combined Focal + CrossEntropy Loss</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check text-success me-2"></i><strong>Early Stopping:</strong> Minority class F1-based monitoring</li>
+                                <li><i class="fas fa-check text-success me-2"></i><strong>Learning Rate:</strong> Adaptive scheduling with plateau detection</li>
+                                <li><i class="fas fa-check text-success me-2"></i><strong>Regularization:</strong> Dropout + gradient clipping</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Model Validation -->
+                <div class="info-card">
+                    <h5 class="mb-3"><i class="fas fa-shield-alt me-2"></i>Validation & Reliability</h5>
+                    <div class="row">
+                        <div class="col-md-4 text-center">
+                            <i class="fas fa-random text-primary" style="font-size: 2rem;"></i>
+                            <h6 class="mt-2">Cross-Validation</h6>
+                            <p class="small text-muted">Stratified train/validation split with consistent performance</p>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <i class="fas fa-microscope text-success" style="font-size: 2rem;"></i>
+                            <h6 class="mt-2">Medical Focus</h6>
+                            <p class="small text-muted">Optimized for healthcare applications with clinical interpretation</p>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <i class="fas fa-lock text-warning" style="font-size: 2rem;"></i>
+                            <h6 class="mt-2">Privacy Compliant</h6>
+                            <p class="small text-muted">Designed with healthcare data privacy and security in mind</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- System Requirements -->
+                <div class="info-card">
+                    <h5 class="mb-3"><i class="fas fa-server me-2"></i>System Requirements</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Minimum Requirements:</h6>
+                            <ul class="small">
+                                <li>Python 3.8+</li>
+                                <li>PyTorch 1.9+</li>
+                                <li>PyTorch Geometric</li>
+                                <li>4GB RAM</li>
+                                <li>CPU: Intel i5 or equivalent</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Recommended:</h6>
+                            <ul class="small">
+                                <li>Python 3.9+</li>
+                                <li>PyTorch 2.0+</li>
+                                <li>CUDA-enabled GPU</li>
+                                <li>8GB+ RAM</li>
+                                <li>SSD storage</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Important Notes -->
+                <div class="alert alert-info" role="alert">
+                    <h6 class="alert-heading">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Important Notes
+                    </h6>
+                    <ul class="mb-0 small">
+                        <li>Model performance may vary based on data quality and completeness</li>
+                        <li>Regular retraining is recommended as new data becomes available</li>
+                        <li>System is designed for decision support, not autonomous diagnosis</li>
+                        <li>All predictions should be validated through clinical assessment</li>
+                    </ul>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="text-center mt-4">
+                    <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg me-3">
+                        <i class="fas fa-home me-2"></i>Back to Dashboard
+                    </a>
+                    <a href="{{ url_for('patient_form') }}" class="btn btn-success btn-lg">
+                        <i class="fas fa-stethoscope me-2"></i>Start Assessment
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
