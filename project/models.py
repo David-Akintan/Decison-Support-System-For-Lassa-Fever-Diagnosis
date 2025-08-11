@@ -6,7 +6,7 @@ from torch_geometric.nn import GCNConv, GATConv, BatchNorm, global_mean_pool
 from torch_geometric.nn.pool import TopKPooling
 import math
 
-class ImprovedGCNNet(nn.Module):
+class GCNNet(nn.Module):
     def __init__(self, in_channels, hidden_channels=128, out_channels=2, num_layers=3, dropout=0.3):
         super().__init__()
         self.num_layers = num_layers
@@ -74,7 +74,7 @@ class ImprovedGCNNet(nn.Module):
         
         return self.classifier(x_att)
 
-class ImprovedGATNet(nn.Module):
+class GATNet(nn.Module):
     def __init__(self, in_channels, hidden_channels=128, out_channels=2, num_layers=3, dropout=0.3, heads=4):
         super().__init__()
         self.num_layers = num_layers
@@ -129,9 +129,9 @@ class AdvancedHybridGNN(nn.Module):
         super().__init__()
         self.fusion_method = fusion_method
         
-        # Improved component networks
-        self.gcn = ImprovedGCNNet(in_channels, hidden_channels, hidden_channels, num_layers, dropout)
-        self.gat = ImprovedGATNet(in_channels, hidden_channels, hidden_channels, num_layers, dropout)
+        #  component networks
+        self.gcn = GCNNet(in_channels, hidden_channels, hidden_channels, num_layers, dropout)
+        self.gat = GATNet(in_channels, hidden_channels, hidden_channels, num_layers, dropout)
         
         # Advanced fusion mechanisms
         if fusion_method == 'advanced_attention':
@@ -202,11 +202,11 @@ class AdvancedHybridGNN(nn.Module):
         return logits
 
 # Legacy classes for backward compatibility
-class GCNNet(ImprovedGCNNet):
+class GCNNet(GCNNet):
     def __init__(self, in_channels, hidden_channels=128, out_channels=2, num_layers=3, dropout=0.3):
         super().__init__(in_channels, hidden_channels, out_channels, num_layers, dropout)
 
-class GATNet(ImprovedGATNet):
+class GATNet(GATNet):
     def __init__(self, in_channels, hidden_channels=128, out_channels=2, num_layers=3, dropout=0.3):
         super().__init__(in_channels, hidden_channels, out_channels, num_layers, dropout)
 

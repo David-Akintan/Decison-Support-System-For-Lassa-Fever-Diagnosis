@@ -84,25 +84,44 @@ def patient_form():
 def predict():
     """Make prediction based on patient data"""
     try:
-        # Get form data
+        # Helper function to safely convert form values
+        def safe_int(value, default=0):
+            try:
+                if value is None or value == '':
+                    return default
+                return int(value)
+            except (ValueError, TypeError):
+                return default
+        
+        def safe_float(value, default=0.0):
+            try:
+                if value is None or value == '':
+                    return default
+                return float(value)
+            except (ValueError, TypeError):
+                return default
+        
+        # Get form data with safe conversion
         patient_data = {
-            'fever': int(request.form.get('fever', 0)),
-            'headache': int(request.form.get('headache', 0)),
-            'muscle_pain': int(request.form.get('muscle_pain', 0)),
-            'fatigue': int(request.form.get('fatigue', 0)),
-            'sore_throat': int(request.form.get('sore_throat', 0)),
-            'nausea': int(request.form.get('nausea', 0)),
-            'vomiting': int(request.form.get('vomiting', 0)),
-            'diarrhea': int(request.form.get('diarrhea', 0)),
-            'abdominal_pain': int(request.form.get('abdominal_pain', 0)),
-            'chest_pain': int(request.form.get('chest_pain', 0)),
-            'travel_endemic': int(request.form.get('travel_endemic', 0)),
-            'contact_suspected': int(request.form.get('contact_suspected', 0)),
-            'contact_confirmed': int(request.form.get('contact_confirmed', 0)),
-            'healthcare_exposure': int(request.form.get('healthcare_exposure', 0)),
-            'age': float(request.form.get('age', 30)),
-            'temperature': float(request.form.get('temperature', 37.0))
+            'fever': safe_int(request.form.get('fever')),
+            'headache': safe_int(request.form.get('headache')),
+            'muscle_pain': safe_int(request.form.get('muscle_pain')),
+            'fatigue': safe_int(request.form.get('fatigue')),
+            'sore_throat': safe_int(request.form.get('sore_throat')),
+            'nausea': safe_int(request.form.get('nausea')),
+            'vomiting': safe_int(request.form.get('vomiting')),
+            'diarrhea': safe_int(request.form.get('diarrhea')),
+            'abdominal_pain': safe_int(request.form.get('abdominal_pain')),
+            'chest_pain': safe_int(request.form.get('chest_pain')),
+            'travel_endemic': safe_int(request.form.get('travel_endemic')),
+            'contact_suspected': safe_int(request.form.get('contact_suspected')),
+            'contact_confirmed': safe_int(request.form.get('contact_confirmed')),
+            'healthcare_exposure': safe_int(request.form.get('healthcare_exposure')),
+            'age': safe_float(request.form.get('age'), 30.0),
+            'temperature': safe_float(request.form.get('temperature'), 37.0)
         }
+        
+        logger.info(f"Processing patient data: {patient_data}")
         
         # Make prediction using mock function
         result = mock_prediction(patient_data)
@@ -117,8 +136,9 @@ def predict():
         
     except Exception as e:
         logger.error(f"Prediction error: {str(e)}")
-        return render_template('results.html', 
-                             result={'error': 'Prediction failed. Please try again.'})
+        import traceback
+        logger.error(f"Full traceback: {traceback.format_exc()}")
+        return jsonify({'error': f'Prediction failed: {str(e)}'}), 500
 
 @app.route('/api/predict', methods=['POST'])
 def api_predict():
