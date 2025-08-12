@@ -173,9 +173,10 @@ def model_info():
         'accuracy': '19.26% (baseline)',
         'sensitivity': '93.63%',
         'specificity': '~14.52%',
-        'note': 'This is a demonstration version using rule-based predictions'
+        'note': 'This is a demonstration version using rule-based predictions',
+        'model_loaded': True  # Add the missing field that template expects
     }
-    return render_template('model_info.html', model_info=model_info)
+    return render_template('model_info.html', info=model_info)
 
 @app.errorhandler(404)
 def not_found(error):
