@@ -108,18 +108,18 @@
                 <div class="diagnosis-card {% if result.prediction == 1 %}diagnosis-positive{% else %}diagnosis-negative{% endif %}">
                     <h3 class="mb-3">
                         <i class="fas fa-{% if result.prediction == 1 %}exclamation-triangle{% else %}check-circle{% endif %} me-3"></i>
-                        {{ interpretation.diagnosis }}
+                        {% if result.prediction == 1 %}Lassa Fever Risk Detected{% else %}Low Lassa Fever Risk{% endif %}
                     </h3>
                     <div class="row">
                         <div class="col-md-6">
                             <h5>Risk Level</h5>
-                            <span class="badge bg-{{ interpretation.risk_color }} risk-badge">
-                                {{ interpretation.risk_level }}
+                            <span class="badge bg-{% if result.risk_level == 'High' %}danger{% elif result.risk_level == 'Medium' %}warning{% else %}success{% endif %} risk-badge">
+                                {{ result.risk_level }}
                             </span>
                         </div>
                         <div class="col-md-6">
                             <h5>Lassa Probability</h5>
-                            <h2 class="mb-0">{{ interpretation.lassa_probability_percent }}%</h2>
+                            <h2 class="mb-0">{{ (result.risk_score * 100)|round(1) }}%</h2>
                         </div>
                     </div>
                 </div>
@@ -128,8 +128,8 @@
                 <div class="info-card">
                     <h5 class="mb-3"><i class="fas fa-chart-bar me-2"></i>Risk Probability</h5>
                     <div class="probability-bar">
-                        <div class="probability-fill" style="width: '{{ interpretation.lassa_probability_percent }}%'">
-                            {{ interpretation.lassa_probability_percent }}%
+                        <div class="probability-fill" style="width: {{ (result.risk_score * 100)|round(1) }}%">
+                            {{ (result.risk_score * 100)|round(1) }}%
                         </div>
                     </div>
                     <div class="row text-center mt-3">
@@ -150,21 +150,23 @@
                     <h5 class="mb-3">
                         <i class="fas fa-user-md me-2"></i>Clinical Recommendation
                     </h5>
-                    <div class="alert alert-{{ interpretation.risk_color }}" role="alert">
+                    <div class="alert alert-{% if result.risk_level == 'High' %}danger{% elif result.risk_level == 'Medium' %}warning{% else %}info{% endif %}" role="alert">
                         <h6 class="alert-heading">Recommended Action:</h6>
-                        <p class="mb-0">{{ interpretation.recommendation }}</p>
+                        <p class="mb-0">{{ result.recommendation }}</p>
                     </div>
                 </div>
 
                 <!-- Key Symptoms Present -->
-                {% if interpretation.key_symptoms %}
+                {% if result.patient_data %}
                 <div class="info-card">
                     <h5 class="mb-3">
                         <i class="fas fa-list-check me-2"></i>Key Symptoms Present
                     </h5>
                     <div>
-                        {% for symptom in interpretation.key_symptoms %}
-                            <span class="symptom-chip">{{ symptom }}</span>
+                        {% for key, value in result.patient_data.items() %}
+                            {% if value == 1 and key != 'age' and key != 'temperature' %}
+                                <span class="symptom-chip">{{ key.replace('_', ' ').title() }}</span>
+                            {% endif %}
                         {% endfor %}
                     </div>
                 </div>
@@ -177,7 +179,7 @@
                         <div class="col-md-4">
                             <div class="text-center">
                                 <h6 class="text-muted">Model Confidence</h6>
-                                <h4 class="text-primary">{{ interpretation.confidence_percent }}%</h4>
+                                <h4 class="text-primary">{{ (result.confidence * 100)|round(1) }}%</h4>
                             </div>
                         </div>
                         <div class="col-md-4">
