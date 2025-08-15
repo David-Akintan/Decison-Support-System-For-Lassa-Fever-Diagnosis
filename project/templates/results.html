@@ -204,16 +204,16 @@
                     <h5 class="mb-3"><i class="fas fa-user me-2"></i>Patient Summary</h5>
                     <div class="row">
                         <div class="col-md-3">
-                            <strong>Age:</strong> {{ patient_data.age_recode }} years
+                            <strong>Age:</strong> {{ result.patient_data.age_recode }} years
                         </div>
                         <div class="col-md-3">
-                            <strong>Sex:</strong> {% if patient_data.sex_new2 == 1 %}Male{% else %}Female{% endif %}
+                            <strong>Sex:</strong> {% if result.patient_data.sex_new2 == 1 %}Male{% else %}Female{% endif %}
                         </div>
                         <div class="col-md-3">
-                            <strong>State:</strong> {{ patient_data.State_new }}
+                            <strong>State:</strong> {{ result.patient_data.State_new }}
                         </div>
                         <div class="col-md-3">
-                            <strong>Contact History:</strong> {% if patient_data.contact_with_lassa_case == 1 %}Yes{% else %}No{% endif %}
+                            <strong>Contact History:</strong> {% if result.patient_data.contact_with_lassa_case == 1 %}Yes{% else %}No{% endif %}
                         </div>
                     </div>
                 </div>
