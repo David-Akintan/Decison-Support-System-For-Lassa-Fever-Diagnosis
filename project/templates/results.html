@@ -235,20 +235,40 @@
                 </div>
 
                 <!-- Patient Summary -->
+                <!-- Debug: Show all patient data -->
+                <div class="debug-info" style="display: none;">
+                    <h5>Debug - Patient Data:</h5>
+                    <pre>{{ result.patient_data|tojson(indent=2) }}</pre>
+                </div>
+                
                 <div class="info-card">
                     <h5 class="mb-3"><i class="fas fa-user me-2"></i>Patient Summary</h5>
                     <div class="row">
                         <div class="col-md-3">
-                            <strong>Age:</strong> {{ result.patient_data.age_recode }} years
+                            <strong>Age:</strong> {{ result.patient_data.age_recode if 'age_recode' in result.patient_data else 'N/A' }} years
                         </div>
                         <div class="col-md-3">
-                            <strong>Sex:</strong> {% if result.patient_data.sex_new2 == 1 %}Male{% else %}Female{% endif %}
+                            <strong>Sex:</strong> {% if 'sex_new2' in result.patient_data %}{% if result.patient_data.sex_new2 == 1 %}Male{% else %}Female{% endif %}{% else %}N/A{% endif %}
                         </div>
                         <div class="col-md-3">
-                            <strong>State:</strong> {{ result.patient_data.State_new }}
+                            <strong>State:</strong> 
+                            {% if 'State_new' in result.patient_data %}
+                                {{ result.patient_data.State_new }}
+                            {% elif 'state' in result.patient_data %}
+                                {{ result.patient_data.state }}
+                            {% elif 'state_of_residence' in result.patient_data %}
+                                {{ result.patient_data.state_of_residence }}
+                            {% else %}
+                                N/A
+                            {% endif %}
                         </div>
                         <div class="col-md-3">
-                            <strong>Contact History:</strong> {% if result.patient_data.contact_with_lassa_case == 1 %}Yes{% else %}No{% endif %}
+                            <strong>Contact History:</strong> 
+                            {% if 'contact_with_lassa_case' in result.patient_data %}
+                                {% if result.patient_data.contact_with_lassa_case == 1 %}Yes{% else %}No{% endif %}
+                            {% else %}
+                                N/A
+                            {% endif %}
                         </div>
                     </div>
                 </div>
