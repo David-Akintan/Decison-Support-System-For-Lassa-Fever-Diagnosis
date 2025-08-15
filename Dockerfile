@@ -10,14 +10,14 @@ RUN apt-get update && apt-get install -y \
     g++ \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first for better caching
-COPY requirements_production.txt .
+# Copy requirements file
+COPY requirements_production.txt /app/
 
 # Install Python dependencies
-RUN pip install --no-cache-dir -r requirements_production.txt
+RUN pip install --no-cache-dir -r /app/requirements_production.txt
 
 # Copy application code
-COPY . .
+COPY . /app/
 
 # Create non-root user for security
 RUN useradd --create-home --shell /bin/bash app \
