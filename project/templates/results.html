@@ -87,6 +87,41 @@
             font-weight: 600;
             margin: 0.5rem;
         }
+
+        /* Print-specific styles */
+        @media print {
+            body {
+                background: white !important;
+                color: black !important;
+                font-size: 12pt;
+            }
+            
+            .results-container {
+                box-shadow: none !important;
+                border: 1px solid #ddd !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                width: 100% !important;
+            }
+            
+            .btn, .no-print {
+                display: none !important;
+            }
+            
+            .diagnosis-card {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+            
+            .alert {
+                border: 1px solid #ddd;
+            }
+            
+            @page {
+                size: A4;
+                margin: 1.5cm;
+            }
+        }
     </style>
 </head>
 <body>
@@ -234,13 +269,13 @@
 
                 <!-- Action Buttons -->
                 <div class="text-center mt-4">
-                    <a href="{{ url_for('patient_form') }}" class="btn btn-primary btn-action">
+                    <a href="{{ url_for('patient_form') }}" class="btn btn-primary btn-action no-print">
                         <i class="fas fa-plus me-2"></i>New Assessment
                     </a>
-                    <a href="{{ url_for('index') }}" class="btn btn-outline-secondary btn-action">
+                    <a href="{{ url_for('index') }}" class="btn btn-outline-secondary btn-action no-print">
                         <i class="fas fa-home me-2"></i>Dashboard
                     </a>
-                    <button onclick="window.print()" class="btn btn-outline-info btn-action">
+                    <button onclick="window.print()" class="btn btn-outline-info btn-action no-print">
                         <i class="fas fa-print me-2"></i>Print Report
                     </button>
                 </div>
@@ -260,6 +295,16 @@
                     probabilityFill.style.width = targetWidth;
                 }, 500);
             }
+            
+            // Add print header/footer
+            window.onafterprint = function() {
+                // Reset any print-specific styles if needed
+            };
+            
+            // Optional: Add print button functionality
+            document.querySelector('.btn-print').addEventListener('click', function() {
+                window.print();
+            });
         });
     </script>
 </body>
