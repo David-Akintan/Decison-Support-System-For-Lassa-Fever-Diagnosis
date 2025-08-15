@@ -49,7 +49,7 @@ class LassaFeverPredictor:
                         num_layers=model_config['num_layers'],
                         dropout=model_config['dropout']
                     )
-                else:  # gat
+                else:  # gat model
                     self.model = GATNet(
                         in_channels=model_config['in_channels'],
                         hidden_channels=model_config['hidden_channels'],
