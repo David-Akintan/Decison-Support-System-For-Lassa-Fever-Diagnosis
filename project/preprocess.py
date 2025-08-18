@@ -267,22 +267,173 @@ def enhanced_preprocessing_pipeline(df, target_col, test_size=0.2):
         'df': df
     }
 
-def create__graph(X, k=8, similarity_threshold=0.1):
-    """Create  graph structure with better connectivity"""
-    print(f"=== Creating Graph Structure ===")
+def create_enhanced_graph(X, df, k=8, similarity_threshold=0.1):
+    """Create enhanced graph structure with medical domain knowledge"""
+    print(f"=== Creating Enhanced Medical Graph Structure ===")
     n_samples = X.shape[0]
     
-    # Adaptive k based on dataset size and feature dimensionality
-    k_adaptive = min(max(5, int(np.sqrt(n_samples) * 0.5)), 15)
+    # Adaptive k based on dataset size
+    k_adaptive = min(max(5, int(np.sqrt(n_samples) * 0.3)), 12)
     k_use = min(k_adaptive, k, n_samples - 1)
     
     print(f"Using k={k_use} for graph construction")
     
-    # Memory-efficient graph construction
+    # Initialize edge sets
+    edges = set()
+    edge_weights = {}
+    
+    # 1. Geographic proximity edges (stronger medical relevance)
+    if 'state_residence_new' in df.columns:
+        state_groups = df.groupby('state_residence_new').groups
+        for state, indices in state_groups.items():
+            if len(indices) > 1:
+                indices_list = indices.tolist()
+                # Connect patients from same state with higher weight
+                for i in range(len(indices_list)):
+                    for j in range(i+1, min(i+6, len(indices_list))):  # Limit connections per state
+                        idx1, idx2 = indices_list[i], indices_list[j]
+                        edges.add((idx1, idx2))
+                        edge_weights[(idx1, idx2)] = 0.8  # High weight for geographic proximity
+    
+    # 2. Contact tracing edges (highest medical relevance)
+    contact_cols = ['contact_with_source_case_new', 'direct_contact_probable_case']
+    for col in contact_cols:
+        if col in df.columns:
+            # Connect patients with confirmed contact history
+            contact_indices = df[df[col] == 1].index.tolist()
+            if len(contact_indices) > 1:
+                for i in range(len(contact_indices)):
+                    for j in range(i+1, min(i+4, len(contact_indices))):  # Limit contact connections
+                        idx1, idx2 = contact_indices[i], contact_indices[j]
+                        edges.add((idx1, idx2))
+                        edge_weights[(idx1, idx2)] = 0.9  # Very high weight for contact tracing
+    
+    # 3. Temporal proximity edges (patients with similar onset dates)
+    date_cols = ['date_symptom_onset2', 'initial_sample_date2']
+    for col in date_cols:
+        if col in df.columns and not df[col].isnull().all():
+            # Group by similar dates (within 7 days)
+            df_temp = df.dropna(subset=[col])
+            if len(df_temp) > 1:
+                df_temp = df_temp.sort_values(col)
+                for i in range(len(df_temp)-1):
+                    for j in range(i+1, min(i+4, len(df_temp))):
+                        idx1, idx2 = df_temp.index[i], df_temp.index[j]
+                        date_diff = abs(df_temp.iloc[j][col] - df_temp.iloc[i][col])
+                        # Convert timedelta to days for comparison
+                        if hasattr(date_diff, 'days'):
+                            date_diff_days = date_diff.days
+                        elif hasattr(date_diff, 'total_seconds'):
+                            date_diff_days = date_diff.total_seconds() / (24 * 3600)
+                        else:
+                            date_diff_days = abs(float(date_diff)) / (24 * 3600)
+                        
+                        if date_diff_days <= 7:  # Within 7 days
+                            edges.add((idx1, idx2))
+                            edge_weights[(idx1, idx2)] = 0.7  # Medium-high weight for temporal proximity
+    
+    # 4. Enhanced feature similarity edges (improved from original)
     if n_samples > 5000:
-        return build_large_graph_efficient(X, k_use, similarity_threshold)
+        similarity_edge_index, similarity_weights = build_large_graph_efficient(X, k_use, similarity_threshold)
     else:
-        return build_standard_graph(X, k_use, similarity_threshold)
+        similarity_edge_index, similarity_weights = build_standard_graph(X, k_use, similarity_threshold)
+    
+    # Convert tensor edge_index to edge tuples and combine with weights
+    if isinstance(similarity_edge_index, torch.Tensor):
+        # Convert edge_index tensor to list of tuples
+        similarity_edges_array = similarity_edge_index.t().numpy()  # Transpose and convert to numpy
+        similarity_edges_list = [(int(edge[0]), int(edge[1])) for edge in similarity_edges_array]
+        
+        # Create weights dictionary
+        if isinstance(similarity_weights, torch.Tensor):
+            similarity_weights_dict = {edge: similarity_weights[i].item() for i, edge in enumerate(similarity_edges_list)}
+        else:
+            similarity_weights_dict = {edge: 0.4 for edge in similarity_edges_list}
+    else:
+        similarity_edges_list = list(similarity_edges)
+        similarity_weights_dict = similarity_weights if isinstance(similarity_weights, dict) else {}
+    
+    # Add similarity edges
+    for edge in similarity_edges_list:
+        if edge not in edges:  # Don't override medical edges
+            edges.add(edge)
+            edge_weights[edge] = similarity_weights_dict.get(edge, 0.4)  # Lower weight for pure similarity
+    
+    # 5. Symptom pattern edges (connect patients with similar critical symptoms)
+    critical_symptoms = ['fever_new', 'bleeding_gums', 'bleeding_from_eyes', 'headache_new']
+    available_symptoms = [col for col in critical_symptoms if col in df.columns]
+    
+    if available_symptoms:
+        for symptom in available_symptoms:
+            symptom_positive = df[df[symptom] == 1].index.tolist()
+            if len(symptom_positive) > 1:
+                # Connect patients with same critical symptoms (limited connections)
+                for i in range(len(symptom_positive)):
+                    for j in range(i+1, min(i+3, len(symptom_positive))):
+                        idx1, idx2 = symptom_positive[i], symptom_positive[j]
+                        if (idx1, idx2) not in edges:
+                            edges.add((idx1, idx2))
+                            edge_weights[(idx1, idx2)] = 0.6  # Medium weight for symptom similarity
+    
+    return finalize_enhanced_graph(edges, edge_weights, n_samples)
+
+def finalize_enhanced_graph(edges, edge_weights, n_samples):
+    """Finalize enhanced graph construction with better connectivity"""
+    # Make graph undirected and ensure connectivity
+    edges_undirected = set()
+    weights_undirected = {}
+    
+    for (i, j) in edges:
+        edges_undirected.add((i, j))
+        edges_undirected.add((j, i))
+        weight = edge_weights.get((i, j), edge_weights.get((j, i), 0.5))
+        weights_undirected[(i, j)] = weight
+        weights_undirected[(j, i)] = weight
+    
+    # Ensure minimum connectivity for isolated nodes
+    if len(edges_undirected) == 0:
+        # Create minimal connectivity
+        for i in range(min(10, n_samples-1)):
+            edges_undirected.add((i, i+1))
+            edges_undirected.add((i+1, i))
+            weights_undirected[(i, i+1)] = 0.3
+            weights_undirected[(i+1, i)] = 0.3
+    
+    # Check for isolated nodes and connect them
+    connected_nodes = set()
+    for (i, j) in edges_undirected:
+        connected_nodes.add(i)
+        connected_nodes.add(j)
+    
+    isolated_nodes = set(range(n_samples)) - connected_nodes
+    if isolated_nodes:
+        print(f"Connecting {len(isolated_nodes)} isolated nodes")
+        for node in isolated_nodes:
+            # Connect to nearest connected node
+            nearest_connected = min(connected_nodes, key=lambda x: abs(x - node))
+            edges_undirected.add((node, nearest_connected))
+            edges_undirected.add((nearest_connected, node))
+            weights_undirected[(node, nearest_connected)] = 0.2
+            weights_undirected[(nearest_connected, node)] = 0.2
+    
+    if len(edges_undirected) > 0:
+        edge_list = list(edges_undirected)
+        edge_index = torch.tensor(edge_list, dtype=torch.long).t().contiguous()
+        edge_weights_tensor = torch.tensor([weights_undirected[edge] for edge in edge_list], dtype=torch.float)
+    else:
+        edge_index = torch.tensor([[0, 1], [1, 0]], dtype=torch.long).t()
+        edge_weights_tensor = torch.tensor([0.1, 0.1], dtype=torch.float)
+    
+    avg_degree = len(edges_undirected) / n_samples if n_samples > 0 else 0
+    print(f"✅ Enhanced graph created: {len(edges_undirected)} edges, avg degree: {avg_degree:.2f}")
+    
+    # Print edge type distribution
+    medical_edges = sum(1 for w in weights_undirected.values() if w >= 0.7)
+    similarity_edges = sum(1 for w in weights_undirected.values() if w < 0.5)
+    print(f"   Medical edges (contact/geographic): {medical_edges}")
+    print(f"   Similarity edges: {similarity_edges}")
+    
+    return edge_index, edge_weights_tensor
 
 def build_large_graph_efficient(X, k, similarity_threshold, chunk_size=1000):
     """Memory-efficient graph construction for large datasets"""
@@ -379,7 +530,7 @@ def df_to_pyg_data(csv_path, k=8):
     processed = enhanced_preprocessing_pipeline(df, 'InitialSampleFinalLaboratoryResultPathogentest')
     
     # Create graph
-    edge_index, edge_weights = create__graph(processed['X'], k=k)
+    edge_index, edge_weights = create_enhanced_graph(processed['X'], processed['df'], k=k)
     
     return {
         'x': processed['X'],

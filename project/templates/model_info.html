@@ -95,13 +95,13 @@
             <!-- Main Content -->
             <div class="p-4">
                 <!-- System Status -->
-                <div class="status-card {% if info.model_loaded %}status-online{% else %}status-offline{% endif %}">
+                <div class="status-card {% if model_info.model_loaded %}status-online{% else %}status-offline{% endif %}">
                     <h3 class="mb-3">
-                        <i class="fas fa-{% if info.model_loaded %}check-circle{% else %}times-circle{% endif %} me-3"></i>
-                        System Status: {% if info.model_loaded %}ONLINE{% else %}OFFLINE{% endif %}
+                        <i class="fas fa-{% if model_info.model_loaded %}check-circle{% else %}times-circle{% endif %} me-3"></i>
+                        System Status: {% if model_info.model_loaded %}ONLINE{% else %}OFFLINE{% endif %}
                     </h3>
                     <p class="mb-0">
-                        {% if info.model_loaded %}
+                        {% if model_info.model_loaded %}
                             AI model is loaded and ready for patient assessments
                         {% else %}
                             AI model not loaded. Please train the model first using train.py
@@ -200,11 +200,11 @@
                                 </tr>
                                 <tr>
                                     <td><strong>Device:</strong></td>
-                                    <td>{{ info.device }}</td>
+                                    <td>{{ model_info.device }}</td>
                                 </tr>
                                 <tr>
                                     <td><strong>Features Count:</strong></td>
-                                    <td>{{ info.features_count }}</td>
+                                    <td>{{ model_info.features_count }}</td>
                                 </tr>
                             </table>
                         </div>
@@ -243,11 +243,11 @@
                 </div>
 
                 <!-- Features Used -->
-                {% if info.features_used %}
+                {% if model_info.features_used %}
                 <div class="info-card">
-                    <h5 class="mb-3"><i class="fas fa-list me-2"></i>Clinical Features ({{ info.features_count }})</h5>
+                    <h5 class="mb-3"><i class="fas fa-list me-2"></i>Clinical Features ({{ model_info.features_count }})</h5>
                     <div class="feature-list">
-                        {% for feature in info.features_used %}
+                        {% for feature in model_info.features_used %}
                             <span class="feature-tag">{{ feature }}</span>
                         {% endfor %}
                     </div>
@@ -343,7 +343,7 @@
                     <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg me-3">
                         <i class="fas fa-home me-2"></i>Back to Dashboard
                     </a>
-                    <a href="{{ url_for('patient_form') }}" class="btn btn-success btn-lg">
+                    <a href="{{ url_for('predict_form') }}" class="btn btn-success btn-lg">
                         <i class="fas fa-stethoscope me-2"></i>Start Assessment
                     </a>
                 </div>

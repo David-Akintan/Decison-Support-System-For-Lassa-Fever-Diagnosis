@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lassa Fever Decision Support - Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .dashboard-card {
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+        .dashboard-card:hover {
+            transform: translateY(-2px);
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .risk-very-high { background-color: #dc3545; color: white; }
+        .risk-high { background-color: #fd7e14; color: white; }
+        .risk-moderate { background-color: #ffc107; color: black; }
+        .risk-low { background-color: #20c997; color: white; }
+        .risk-very-low { background-color: #28a745; color: white; }
+        .navbar-brand {
+            font-weight: bold;
+            color: #2c3e50 !important;
+        }
+        .chart-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                <i class="fas fa-virus text-danger me-2"></i>
+                Lassa Fever Decision Support System
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="{{ url_for('dashboard') }}">
+                    <i class="fas fa-chart-dashboard me-1"></i>Dashboard
+                </a>
+                <a class="nav-link" href="{{ url_for('predict_form') }}">
+                    <i class="fas fa-user-md me-1"></i>Single Prediction
+                </a>
+                <a class="nav-link" href="{{ url_for('batch_predict_form') }}">
+                    <i class="fas fa-upload me-1"></i>Batch Prediction
+                </a>
+                <a class="nav-link" href="{{ url_for('model_info') }}">
+                    <i class="fas fa-info-circle me-1"></i>Model Info
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h1 class="display-6 text-center mb-3">
+                    <i class="fas fa-chart-line text-primary me-3"></i>
+                    Medical Dashboard
+                </h1>
+                <p class="text-center text-muted">Real-time analytics and prediction insights</p>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+                <div class="card dashboard-card stat-card">
+                    <div class="card-body text-center">
+                        <i class="fas fa-users fa-2x mb-2"></i>
+                        <h3 class="card-title">{{ stats.total_predictions }}</h3>
+                        <p class="card-text">Total Predictions</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card dashboard-card" style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%); color: white;">
+                    <div class="card-body text-center">
+                        <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                        <h3 class="card-title">{{ stats.positive_predictions }}</h3>
+                        <p class="card-text">Positive Cases</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card dashboard-card" style="background: linear-gradient(135deg, #26de81 0%, #20bf6b 100%); color: white;">
+                    <div class="card-body text-center">
+                        <i class="fas fa-check-circle fa-2x mb-2"></i>
+                        <h3 class="card-title">{{ stats.negative_predictions }}</h3>
+                        <p class="card-text">Negative Cases</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card dashboard-card" style="background: linear-gradient(135deg, #4834d4 0%, #686de0 100%); color: white;">
+                    <div class="card-body text-center">
+                        <i class="fas fa-percentage fa-2x mb-2"></i>
+                        <h3 class="card-title">{{ "%.1f"|format(stats.avg_confidence * 100) }}%</h3>
+                        <p class="card-text">Avg Confidence</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        {% if chart_data and chart_data.dashboard_chart %}
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card dashboard-card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-chart-area me-2"></i>Analytics Overview
+                        </h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <img src="data:image/png;base64,{{ chart_data.dashboard_chart }}" 
+                             class="img-fluid" alt="Dashboard Analytics">
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Recent Predictions -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card dashboard-card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-history me-2"></i>Recent Predictions
+                        </h5>
+                        <span class="badge bg-primary">{{ stats.recent_predictions }} this week</span>
+                    </div>
+                    <div class="card-body">
+                        {% if recent_predictions %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Patient ID</th>
+                                        <th>Prediction</th>
+                                        <th>Risk Level</th>
+                                        <th>Confidence</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for pred in recent_predictions[:10] %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ pred.patient_id if pred.patient_id else 'N/A' }}</strong>
+                                        </td>
+                                        <td>
+                                            {% if pred.prediction == 1 %}
+                                                <span class="badge bg-danger">
+                                                    <i class="fas fa-virus me-1"></i>Positive
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-check me-1"></i>Negative
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge risk-{{ pred.risk_level.lower().replace(' ', '-') }}">
+                                                {{ pred.risk_level }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="progress" style="height: 20px;">
+                                                <div class="progress-bar" role="progressbar" 
+                                                     style="width: {{ (pred.confidence * 100)|round }}%"
+                                                     aria-valuenow="{{ (pred.confidence * 100)|round }}" 
+                                                     aria-valuemin="0" aria-valuemax="100">
+                                                    {{ "%.1f"|format(pred.confidence * 100) }}%
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">
+                                                {% if pred.prediction_date %}
+                                                    {{ pred.prediction_date.strftime('%Y-%m-%d %H:%M') if pred.prediction_date.strftime else pred.prediction_date|string|truncate(16) }}
+                                                {% else %}
+                                                    Unknown
+                                                {% endif %}
+                                            </small>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No predictions yet. Start by making your first prediction!</p>
+                            <a href="{{ url_for('predict_form') }}" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>Make Prediction
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="row mb-4">
+            <div class="col-md-4 mb-3">
+                <div class="card dashboard-card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-user-md fa-3x text-primary mb-3"></i>
+                        <h5 class="card-title">Single Patient</h5>
+                        <p class="card-text">Analyze individual patient symptoms and risk factors</p>
+                        <a href="{{ url_for('predict_form') }}" class="btn btn-primary">
+                            <i class="fas fa-stethoscope me-2"></i>Start Analysis
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card dashboard-card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-upload fa-3x text-success mb-3"></i>
+                        <h5 class="card-title">Batch Processing</h5>
+                        <p class="card-text">Upload CSV file for multiple patient analysis</p>
+                        <a href="{{ url_for('batch_predict_form') }}" class="btn btn-success">
+                            <i class="fas fa-file-csv me-2"></i>Upload Data
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card dashboard-card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-cogs fa-3x text-info mb-3"></i>
+                        <h5 class="card-title">Model Information</h5>
+                        <p class="card-text">View model performance metrics and details</p>
+                        <a href="{{ url_for('model_info') }}" class="btn btn-info">
+                            <i class="fas fa-chart-bar me-2"></i>View Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-light py-4 mt-5">
+        <div class="container text-center">
+            <p class="mb-0">
+                <i class="fas fa-shield-virus me-2"></i>
+                Lassa Fever Decision Support System - Enhanced AI-Powered Medical Diagnosis
+            </p>
+            <small class="text-muted">Powered by Advanced Graph Neural Networks</small>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

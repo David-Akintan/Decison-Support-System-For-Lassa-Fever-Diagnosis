@@ -340,7 +340,7 @@ def enhanced_train_v2(
     
     # Learning rate scheduling
     scheduler = ReduceLROnPlateau(
-        optimizer, mode='max', factor=0.7, patience=15, verbose=True, min_lr=1e-6
+        optimizer, mode='max', factor=0.7, patience=15, min_lr=1e-6
     )
     
     # Training loop

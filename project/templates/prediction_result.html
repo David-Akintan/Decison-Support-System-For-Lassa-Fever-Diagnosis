@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assessment Results - Lassa Fever Decision Support</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .results-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            margin: 2rem auto;
+            max-width: 1000px;
+        }
+        .results-header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            border-radius: 20px 20px 0 0;
+            padding: 2rem;
+            text-align: center;
+        }
+        .diagnosis-card {
+            border-radius: 15px;
+            padding: 2rem;
+            margin: 2rem 0;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        .diagnosis-positive {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+        }
+        .diagnosis-negative {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+        }
+        .risk-badge {
+            font-size: 1.2rem;
+            padding: 0.5rem 1.5rem;
+            border-radius: 25px;
+            font-weight: 600;
+        }
+        .risk-very-low { background: #2ecc71; color: white; }
+        .risk-low { background: #f39c12; color: white; }
+        .risk-moderate { background: #e67e22; color: white; }
+        .risk-high { background: #e74c3c; color: white; }
+        .risk-very-high { background: #8e44ad; color: white; }
+        
+        .uncertainty-warning {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .patient-info {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+        
+        .medical-advice {
+            background: #e8f4fd;
+            border-left: 4px solid #3498db;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            border-radius: 0 10px 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="results-container">
+            <!-- Header -->
+            <div class="results-header">
+                <h1><i class="fas fa-stethoscope me-3"></i>Assessment Results</h1>
+                <p class="mb-0">Lassa Fever Decision Support System</p>
+            </div>
+
+            <div class="p-4">
+                <!-- Patient Information -->
+                <div class="patient-info">
+                    <h4><i class="fas fa-user me-2"></i>Patient Information</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Patient ID:</strong> {{ patient_data.get('patient_id', 'N/A') }}</p>
+                            <p><strong>Age:</strong> {{ patient_data.get('age', 'N/A') }} years</p>
+                            <p><strong>Sex:</strong> 
+                                {% if patient_data.get('sex') == '1' or patient_data.get('sex') == 1 %}
+                                    Male
+                                {% elif patient_data.get('sex') == '0' or patient_data.get('sex') == 0 %}
+                                    Female
+                                {% else %}
+                                    {{ patient_data.get('sex', 'N/A') }}
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Assessment Date:</strong> 
+                                {% if result.get('timestamp') %}
+                                    {{ result.get('timestamp') }}
+                                {% else %}
+                                    {{ moment().format('MMMM Do YYYY, h:mm A') if moment else 'Current Assessment' }}
+                                {% endif %}
+                            </p>
+                            <p><strong>Temperature:</strong> {{ patient_data.get('temperature', 'N/A') }}°C</p>
+                            <p><strong>Area Type:</strong> {{ patient_data.get('area_type', 'N/A') }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Diagnosis -->
+                <div class="diagnosis-card {% if result.prediction == 1 %}diagnosis-positive{% else %}diagnosis-negative{% endif %}">
+                    <h2><i class="fas fa-diagnoses me-3"></i>
+                        {% if result.prediction == 1 %}
+                            POSITIVE for Lassa Fever
+                        {% else %}
+                            NEGATIVE for Lassa Fever
+                        {% endif %}
+                    </h2>
+                    <p class="mb-3">Confidence: {{ "%.1f"|format(result.confidence * 100) }}%</p>
+                    <span class="risk-badge risk-{{ result.risk_level.lower().replace(' ', '-') }}">
+                        Risk Level: {{ result.risk_level }}
+                    </span>
+                </div>
+
+                <!-- Uncertainty Warning -->
+                {% if result.uncertainty_warning %}
+                <div class="uncertainty-warning">
+                    <h5><i class="fas fa-exclamation-triangle me-2"></i>Uncertainty Detected</h5>
+                    <p class="mb-0">{{ result.uncertainty_warning }}</p>
+                </div>
+                {% endif %}
+
+                <!-- Medical Advice -->
+                <div class="medical-advice">
+                    <h5><i class="fas fa-user-md me-2"></i>Medical Recommendations</h5>
+                    
+                    <!-- Risk Assessment Summary -->
+                    <div class="alert alert-info mb-3">
+                        <h6><i class="fas fa-info-circle me-2"></i>Clinical Assessment Summary</h6>
+                        <p class="mb-2">
+                            <strong>Diagnosis:</strong> 
+                            {% if result.prediction == 1 %}
+                                <span class="text-danger">POSITIVE for Lassa Fever</span> - Immediate medical attention required
+                            {% else %}
+                                <span class="text-success">NEGATIVE for Lassa Fever</span> - Continue monitoring symptoms
+                            {% endif %}
+                        </p>
+                        <p class="mb-2">
+                            <strong>Confidence Level:</strong> {{ "%.1f"|format(result.confidence * 100) }}% 
+                            {% if result.confidence < 0.7 %}
+                                <small class="text-warning">(Moderate confidence - consider additional testing)</small>
+                            {% elif result.confidence >= 0.9 %}
+                                <small class="text-success">(High confidence)</small>
+                            {% endif %}
+                        </p>
+                        <p class="mb-0">
+                            <strong>Risk Category:</strong> 
+                            <span class="badge risk-{{ result.risk_level.lower().replace(' ', '-') }}">{{ result.risk_level }}</span>
+                        </p>
+                    </div>
+
+                    <!-- Detailed Recommendations -->
+                    <div class="recommendations-content">
+                        <h6><i class="fas fa-clipboard-list me-2"></i>Immediate Actions Required</h6>
+                        
+                        {% if result.prediction == 1 %}
+                            <!-- Positive Case Recommendations -->
+                            <div class="alert alert-danger">
+                                <h6 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i>URGENT - Positive Lassa Fever Result</h6>
+                                <ul class="mb-0">
+                                    <li><strong>Immediate isolation</strong> of the patient</li>
+                                    <li><strong>Contact healthcare authorities</strong> immediately</li>
+                                    <li><strong>Laboratory confirmation</strong> with RT-PCR testing</li>
+                                    <li><strong>Start supportive care</strong> and consider Ribavirin therapy</li>
+                                    <li><strong>Contact tracing</strong> for recent exposures</li>
+                                </ul>
+                            </div>
+                        {% else %}
+                            <!-- Negative Case Recommendations -->
+                            <div class="alert alert-success">
+                                <h6 class="alert-heading"><i class="fas fa-check-circle me-2"></i>Negative Result - Continue Monitoring</h6>
+                                <ul class="mb-0">
+                                    <li><strong>Monitor symptoms</strong> closely for 21 days</li>
+                                    <li><strong>Seek medical attention</strong> if symptoms worsen</li>
+                                    <li><strong>Maintain good hygiene</strong> practices</li>
+                                    <li><strong>Avoid contact</strong> with rodents and their excreta</li>
+                                </ul>
+                            </div>
+                        {% endif %}
+
+                        <!-- Risk-specific recommendations -->
+                        {% if result.risk_level in ['HIGH', 'VERY HIGH'] %}
+                        <div class="alert alert-warning">
+                            <h6><i class="fas fa-shield-alt me-2"></i>High Risk Patient - Enhanced Monitoring</h6>
+                            <ul class="mb-0">
+                                <li><strong>Daily temperature monitoring</strong></li>
+                                <li><strong>Watch for bleeding symptoms</strong> (gums, nose, etc.)</li>
+                                <li><strong>Monitor for neurological symptoms</strong></li>
+                                <li><strong>Ensure rapid access to healthcare</strong></li>
+                            </ul>
+                        </div>
+                        {% endif %}
+
+                        <!-- Uncertainty warning if present -->
+                        {% if result.uncertainty_warning %}
+                        <div class="alert alert-warning">
+                            <h6><i class="fas fa-question-circle me-2"></i>Assessment Uncertainty</h6>
+                            <p>{{ result.uncertainty_warning }}</p>
+                            <p class="mb-0"><strong>Recommendation:</strong> Gather additional epidemiological information and consider higher vigilance due to missing data.</p>
+                        </div>
+                        {% endif %}
+
+                        <!-- Original AI advice if available -->
+                        {% if result.medical_advice %}
+                        <div class="mt-3">
+                            <h6><i class="fas fa-robot me-2"></i>AI System Analysis</h6>
+                            <div class="border-start border-primary ps-3">
+                                {{ result.medical_advice|safe }}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Symptoms Summary -->
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header bg-primary text-white">
+                                <h6><i class="fas fa-thermometer-half me-2"></i>Symptoms Present</h6>
+                            </div>
+                            <div class="card-body">
+                                {% set symptoms = [] %}
+                                {% if patient_data.get('fever_new') == '1' or patient_data.get('fever_new') == 1 %}{% set _ = symptoms.append('Fever') %}{% endif %}
+                                {% if patient_data.get('headache_new') == '1' or patient_data.get('headache_new') == 1 %}{% set _ = symptoms.append('Headache') %}{% endif %}
+                                {% if patient_data.get('vomiting_new') == '1' or patient_data.get('vomiting_new') == 1 %}{% set _ = symptoms.append('Vomiting') %}{% endif %}
+                                {% if patient_data.get('bleeding_new') == '1' or patient_data.get('bleeding_new') == 1 %}{% set _ = symptoms.append('Bleeding') %}{% endif %}
+                                {% if patient_data.get('weakness_new') == '1' or patient_data.get('weakness_new') == 1 %}{% set _ = symptoms.append('Weakness') %}{% endif %}
+                                {% if patient_data.get('abdominal_pain') == '1' or patient_data.get('abdominal_pain') == 1 %}{% set _ = symptoms.append('Abdominal Pain') %}{% endif %}
+                                {% if patient_data.get('diarrhea_new') == '1' or patient_data.get('diarrhea_new') == 1 %}{% set _ = symptoms.append('Diarrhea') %}{% endif %}
+                                {% if patient_data.get('sore_throat') == '1' or patient_data.get('sore_throat') == 1 %}{% set _ = symptoms.append('Sore Throat') %}{% endif %}
+                                {% if patient_data.get('cough_new') == '1' or patient_data.get('cough_new') == 1 %}{% set _ = symptoms.append('Cough') %}{% endif %}
+                                {% if patient_data.get('backache_new') == '1' or patient_data.get('backache_new') == 1 %}{% set _ = symptoms.append('Back Pain') %}{% endif %}
+                                {% if patient_data.get('chest_pain') == '1' or patient_data.get('chest_pain') == 1 %}{% set _ = symptoms.append('Chest Pain') %}{% endif %}
+                                {% if patient_data.get('difficulty_breathing') == '1' or patient_data.get('difficulty_breathing') == 1 %}{% set _ = symptoms.append('Difficulty Breathing') %}{% endif %}
+                                {% if patient_data.get('fatigue_weakness') == '1' or patient_data.get('fatigue_weakness') == 1 %}{% set _ = symptoms.append('Fatigue') %}{% endif %}
+                                {% if patient_data.get('joint_pain_arthritis') == '1' or patient_data.get('joint_pain_arthritis') == 1 %}{% set _ = symptoms.append('Joint Pain') %}{% endif %}
+                                {% if patient_data.get('muscle_pain') == '1' or patient_data.get('muscle_pain') == 1 %}{% set _ = symptoms.append('Muscle Pain') %}{% endif %}
+                                {% if patient_data.get('nausea_new') == '1' or patient_data.get('nausea_new') == 1 %}{% set _ = symptoms.append('Nausea') %}{% endif %}
+                                
+                                {% if symptoms %}
+                                    <ul class="list-unstyled">
+                                        {% for symptom in symptoms %}
+                                        <li><i class="fas fa-check text-danger me-2"></i>{{ symptom }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                {% else %}
+                                    <p class="text-muted">No major symptoms reported</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header bg-warning text-white">
+                                <h6><i class="fas fa-globe-africa me-2"></i>Risk Factors</h6>
+                            </div>
+                            <div class="card-body">
+                                {% set risk_factors = [] %}
+                                {% if patient_data.get('contact_history') == '1' or patient_data.get('contact_history') == 1 %}{% set _ = risk_factors.append('Contact with Lassa Case') %}{% endif %}
+                                {% if patient_data.get('travel_history') == '1' or patient_data.get('travel_history') == 1 %}{% set _ = risk_factors.append('Travel to Endemic Area') %}{% endif %}
+                                {% if patient_data.get('rodent_exposure') == '1' or patient_data.get('rodent_exposure') == 1 %}{% set _ = risk_factors.append('Rodent Exposure') %}{% endif %}
+                                
+                                <!-- Also check for "I don't know" values and display them -->
+                                {% if patient_data.get('contact_history') == '-1' or patient_data.get('contact_history') == -1 %}{% set _ = risk_factors.append('Contact with Lassa Case (Unknown)') %}{% endif %}
+                                {% if patient_data.get('travel_history') == '-1' or patient_data.get('travel_history') == -1 %}{% set _ = risk_factors.append('Travel to Endemic Area (Unknown)') %}{% endif %}
+                                {% if patient_data.get('rodent_exposure') == '-1' or patient_data.get('rodent_exposure') == -1 %}{% set _ = risk_factors.append('Rodent Exposure (Unknown)') %}{% endif %}
+                                
+                                {% if risk_factors %}
+                                    <ul class="list-unstyled">
+                                        {% for factor in risk_factors %}
+                                        <li><i class="fas fa-exclamation-triangle text-warning me-2"></i>{{ factor }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                {% else %}
+                                    <p class="text-muted">No known risk factors</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="text-center mt-4">
+                    <a href="{{ url_for('predict_form') }}" class="btn btn-primary btn-lg me-3">
+                        <i class="fas fa-plus me-2"></i>New Assessment
+                    </a>
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary btn-lg">
+                        <i class="fas fa-chart-bar me-2"></i>Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

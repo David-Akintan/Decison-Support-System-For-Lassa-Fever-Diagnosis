@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Batch Results - Lassa Fever Decision Support</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .risk-very-high { background-color: #dc3545; color: white; }
+        .risk-high { background-color: #fd7e14; color: white; }
+        .risk-moderate { background-color: #ffc107; color: black; }
+        .risk-low { background-color: #20c997; color: white; }
+        .risk-very-low { background-color: #28a745; color: white; }
+        .result-card {
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                <i class="fas fa-virus text-danger me-2"></i>
+                Lassa Fever Decision Support System
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
+                <a class="nav-link" href="{{ url_for('predict_form') }}">Single Prediction</a>
+                <a class="nav-link" href="{{ url_for('batch_predict_form') }}">Batch Prediction</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card result-card">
+                    <div class="card-header bg-success text-white">
+                        <h4 class="mb-0">
+                            <i class="fas fa-check-circle me-2"></i>
+                            Batch Processing Complete: {{ batch_name }}
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-3">
+                                <h3 class="text-primary">{{ results|length }}</h3>
+                                <p class="text-muted">Total Patients</p>
+                            </div>
+                            <div class="col-md-3">
+                                <h3 class="text-danger">{{ results|selectattr('prediction', 'equalto', 1)|list|length }}</h3>
+                                <p class="text-muted">Positive Cases</p>
+                            </div>
+                            <div class="col-md-3">
+                                <h3 class="text-success">{{ results|selectattr('prediction', 'equalto', 0)|list|length }}</h3>
+                                <p class="text-muted">Negative Cases</p>
+                            </div>
+                            <div class="col-md-3">
+                                <h3 class="text-info">{{ "%.1f"|format((results|selectattr('confidence')|map(attribute='confidence')|sum / results|length * 100) if results else 0) }}%</h3>
+                                <p class="text-muted">Avg Confidence</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex gap-2 flex-wrap">
+                    <button class="btn btn-primary" onclick="downloadResults()">
+                        <i class="fas fa-download me-2"></i>Download CSV
+                    </button>
+                    <button class="btn btn-success" onclick="exportPDF()">
+                        <i class="fas fa-file-pdf me-2"></i>Export PDF Report
+                    </button>
+                    <button class="btn btn-info" onclick="showSummary()">
+                        <i class="fas fa-chart-pie me-2"></i>View Summary
+                    </button>
+                    <a href="{{ url_for('batch_predict_form') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-plus me-2"></i>New Batch
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Table -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card result-card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-table me-2"></i>Detailed Results
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="resultsTable">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Patient ID</th>
+                                        <th>Prediction</th>
+                                        <th>Risk Level</th>
+                                        <th>Confidence</th>
+                                        <th>Lassa Probability</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for result in results %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ result.patient_id }}</strong>
+                                        </td>
+                                        <td>
+                                            {% if result.get('error') %}
+                                                <span class="badge bg-warning">
+                                                    <i class="fas fa-exclamation-triangle me-1"></i>Error
+                                                </span>
+                                            {% elif result.prediction == 1 %}
+                                                <span class="badge bg-danger">
+                                                    <i class="fas fa-virus me-1"></i>POSITIVE
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-check me-1"></i>NEGATIVE
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if not result.get('error') %}
+                                                <span class="badge risk-{{ result.risk_level.lower().replace(' ', '-') }}">
+                                                    {{ result.risk_level }}
+                                                </span>
+                                            {% else %}
+                                                <span class="text-muted">N/A</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if not result.get('error') %}
+                                                <div class="progress" style="height: 20px;">
+                                                    <div class="progress-bar {% if result.confidence >= 0.8 %}bg-success{% elif result.confidence >= 0.6 %}bg-info{% elif result.confidence >= 0.4 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                                         role="progressbar" 
+                                                         style="width: {{ (result.confidence * 100)|round }}%">
+                                                        {{ "%.1f"|format(result.confidence * 100) }}%
+                                                    </div>
+                                                </div>
+                                            {% else %}
+                                                <span class="text-muted">N/A</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if not result.get('error') %}
+                                                <span class="badge {% if result.lassa_probability >= 0.7 %}bg-danger{% elif result.lassa_probability >= 0.5 %}bg-warning{% else %}bg-success{% endif %}">
+                                                    {{ "%.1f"|format(result.lassa_probability * 100) }}%
+                                                </span>
+                                            {% else %}
+                                                <span class="text-muted">{{ result.error }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if not result.get('error') %}
+                                                <button class="btn btn-sm btn-outline-primary" 
+                                                        onclick="showDetails('{{ result.patient_id }}')">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Risk Distribution Chart -->
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card result-card">
+                    <div class="card-header">
+                        <h6><i class="fas fa-chart-pie me-2"></i>Risk Distribution</h6>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="riskChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card result-card">
+                    <div class="card-header">
+                        <h6><i class="fas fa-chart-bar me-2"></i>Confidence Distribution</h6>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="confidenceChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Patient Details -->
+    <div class="modal fade" id="patientModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Patient Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="patientDetails">
+                    <!-- Patient details will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Results data for JavaScript processing
+        window.batchResults = {{ results|tojson }};
+
+        // Download results as CSV
+        function downloadResults() {
+            let csvContent = "Patient ID,Prediction,Risk Level,Confidence,Lassa Probability,Status\\n";
+            
+            window.batchResults.forEach(function(result) {
+                if (!result.error) {
+                    csvContent += result.patient_id + "," + (result.prediction === 1 ? 'POSITIVE' : 'NEGATIVE') + "," + result.risk_level + "," + (result.confidence * 100).toFixed(1) + "%," + (result.lassa_probability * 100).toFixed(1) + "%,Success\\n";
+                } else {
+                    csvContent += result.patient_id + ",ERROR,N/A,N/A,N/A," + result.error + "\\n";
+                }
+            });
+            
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `batch_results_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }
+
+        // Show patient details
+        function showDetails(patientId) {
+            const result = window.batchResults.find(r => r.patient_id === patientId);
+            if (result) {
+                document.getElementById('patientDetails').innerHTML = `
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Prediction Details</h6>
+                            <p><strong>Patient ID:</strong> ${result.patient_id}</p>
+                            <p><strong>Prediction:</strong> 
+                                <span class="badge ${result.prediction === 1 ? 'bg-danger' : 'bg-success'}">
+                                    ${result.prediction === 1 ? 'POSITIVE' : 'NEGATIVE'}
+                                </span>
+                            </p>
+                            <p><strong>Risk Level:</strong> 
+                                <span class="badge risk-${result.risk_level.toLowerCase().replace(' ', '-')}">
+                                    ${result.risk_level}
+                                </span>
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Confidence Metrics</h6>
+                            <p><strong>Overall Confidence:</strong> ${(result.confidence * 100).toFixed(1)}%</p>
+                            <p><strong>Lassa Probability:</strong> ${(result.lassa_probability * 100).toFixed(1)}%</p>
+                        </div>
+                    </div>
+                `;
+                new bootstrap.Modal(document.getElementById('patientModal')).show();
+            }
+        }
+
+        // Initialize charts
+        function initCharts() {
+            // Risk distribution chart
+            const riskCounts = {};
+            window.batchResults.forEach(result => {
+                if (!result.error) {
+                    riskCounts[result.risk_level] = (riskCounts[result.risk_level] || 0) + 1;
+                }
+            });
+
+            new Chart(document.getElementById('riskChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(riskCounts),
+                    datasets: [{
+                        data: Object.values(riskCounts),
+                        backgroundColor: ['#dc3545', '#fd7e14', '#ffc107', '#20c997', '#28a745']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+
+            // Confidence distribution chart
+            const confidenceRanges = {'0-20%': 0, '20-40%': 0, '40-60%': 0, '60-80%': 0, '80-100%': 0};
+            window.batchResults.forEach(result => {
+                if (!result.error) {
+                    const conf = result.confidence * 100;
+                    if (conf <= 20) confidenceRanges['0-20%']++;
+                    else if (conf <= 40) confidenceRanges['20-40%']++;
+                    else if (conf <= 60) confidenceRanges['40-60%']++;
+                    else if (conf <= 80) confidenceRanges['60-80%']++;
+                    else confidenceRanges['80-100%']++;
+                }
+            });
+
+            new Chart(document.getElementById('confidenceChart'), {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(confidenceRanges),
+                    datasets: [{
+                        label: 'Number of Patients',
+                        data: Object.values(confidenceRanges),
+                        backgroundColor: '#007bff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize charts when page loads
+        document.addEventListener('DOMContentLoaded', initCharts);
+
+        // Export PDF functionality (placeholder)
+        function exportPDF() {
+            alert('PDF export functionality would be implemented here');
+        }
+
+        // Show summary functionality (placeholder)
+        function showSummary() {
+            alert('Summary view functionality would be implemented here');
+        }
+    </script>
+</body>
+</html>

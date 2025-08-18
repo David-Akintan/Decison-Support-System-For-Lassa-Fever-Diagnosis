@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, flash, redirect, url_for
+from flask import Flask, render_template, request, jsonify, flash, redirect, url_for, send_file
 import torch
 import joblib
 import numpy as np
@@ -6,9 +6,18 @@ import pandas as pd
 from datetime import datetime
 import os
 import json
-from models import HybridGNN, GCNNet, GATNet
+import io
+import base64
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import seaborn as sns
+from models import HybridGNN, GCNNet, GATNet, SuperiorHybridGNN, EnhancedGCNNet, EnhancedGATNet
 from preprocess import build_feature_set
 import torch.nn.functional as F
+from sklearn.metrics import confusion_matrix, classification_report, roc_curve, auc
+import sqlite3
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.secret_key = 'lassa_fever_decision_support_2024'
@@ -31,18 +40,28 @@ class LassaFeverPredictor:
                 checkpoint = torch.load(self.model_path, map_location=self.device, weights_only=False)
                 model_config = checkpoint['model_config']
                 
-                # Recreate model architecture
+                # Recreate model architecture with enhanced models
                 if model_config['model_type'] == 'hybrid':
-                    self.model = HybridGNN(
-                        in_channels=model_config['in_channels'],
-                        hidden_channels=model_config['hidden_channels'],
-                        out_channels=model_config['out_channels'],
-                        num_layers=model_config['num_layers'],
-                        dropout=model_config['dropout'],
-                        fusion_method=model_config.get('fusion_method', 'attention')
-                    )
+                    if 'SuperiorHybridGNN' in str(type(checkpoint.get('model_state_dict', {}))):
+                        self.model = SuperiorHybridGNN(
+                            in_channels=model_config['in_channels'],
+                            hidden_channels=model_config['hidden_channels'],
+                            out_channels=model_config['out_channels'],
+                            num_layers=model_config['num_layers'],
+                            dropout=model_config['dropout'],
+                            fusion_method=model_config.get('fusion_method', 'medical_attention')
+                        )
+                    else:
+                        self.model = HybridGNN(
+                            in_channels=model_config['in_channels'],
+                            hidden_channels=model_config['hidden_channels'],
+                            out_channels=model_config['out_channels'],
+                            num_layers=model_config['num_layers'],
+                            dropout=model_config['dropout'],
+                            fusion_method=model_config.get('fusion_method', 'attention')
+                        )
                 elif model_config['model_type'] == 'gcn':
-                    self.model = GCNNet(
+                    self.model = EnhancedGCNNet(
                         in_channels=model_config['in_channels'],
                         hidden_channels=model_config['hidden_channels'],
                         out_channels=model_config['out_channels'],
@@ -50,7 +69,7 @@ class LassaFeverPredictor:
                         dropout=model_config['dropout']
                     )
                 else:  # gat model
-                    self.model = GATNet(
+                    self.model = EnhancedGATNet(
                         in_channels=model_config['in_channels'],
                         hidden_channels=model_config['hidden_channels'],
                         out_channels=model_config['out_channels'],

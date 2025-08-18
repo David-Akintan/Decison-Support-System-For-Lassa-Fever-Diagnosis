@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Batch Prediction - Lassa Fever Decision Support</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .upload-area {
+            border: 2px dashed #007bff;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+        }
+        .upload-area:hover {
+            border-color: #0056b3;
+            background: #e3f2fd;
+        }
+        .upload-area.dragover {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                <i class="fas fa-virus text-danger me-2"></i>
+                Lassa Fever Decision Support System
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
+                <a class="nav-link" href="{{ url_for('predict_form') }}">Single Prediction</a>
+                <a class="nav-link active" href="{{ url_for('batch_predict_form') }}">Batch Prediction</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="card-title mb-0">
+                            <i class="fas fa-upload me-2"></i>Batch Prediction Upload
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <!-- Flash Messages -->
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                            {% if messages %}
+                                {% for category, message in messages %}
+                                    <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show">
+                                        {{ message }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                        {% endwith %}
+
+                        <form method="POST" enctype="multipart/form-data" id="batchForm">
+                            <!-- Batch Name -->
+                            <div class="mb-4">
+                                <label for="batch_name" class="form-label">
+                                    <i class="fas fa-tag me-2"></i>Batch Name
+                                </label>
+                                <input type="text" class="form-control" id="batch_name" name="batch_name" 
+                                       placeholder="Enter a name for this batch (optional)">
+                                <div class="form-text">Give your batch a descriptive name for easy identification</div>
+                            </div>
+
+                            <!-- File Upload Area -->
+                            <div class="mb-4">
+                                <label class="form-label">
+                                    <i class="fas fa-file-csv me-2"></i>Upload Patient Data (CSV)
+                                </label>
+                                <div class="upload-area" id="uploadArea">
+                                    <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
+                                    <h5>Drag & Drop CSV File Here</h5>
+                                    <p class="text-muted mb-3">or click to browse files</p>
+                                    <input type="file" class="form-control" id="file" name="file" 
+                                           accept=".csv" required style="display: none;">
+                                    <button type="button" class="btn btn-outline-primary" onclick="document.getElementById('file').click()">
+                                        <i class="fas fa-folder-open me-2"></i>Choose File
+                                    </button>
+                                </div>
+                                <div id="fileInfo" class="mt-2" style="display: none;">
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-file me-2"></i>
+                                        <span id="fileName"></span>
+                                        <span class="float-end" id="fileSize"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- CSV Format Requirements -->
+                            <div class="alert alert-info">
+                                <h6><i class="fas fa-info-circle me-2"></i>CSV Format Requirements:</h6>
+                                <ul class="mb-0">
+                                    <li><strong>Required columns:</strong> patient_id, age, sex</li>
+                                    <li><strong>Symptom columns:</strong> fever_new, headache_new, bleeding_gums, etc.</li>
+                                    <li><strong>Contact history:</strong> contact_with_source_case_new, direct_contact_probable_case</li>
+                                    <li><strong>Geographic:</strong> state_residence_new</li>
+                                    <li><strong>Values:</strong> Use 1 for Yes/Present, 0 for No/Absent</li>
+                                </ul>
+                            </div>
+
+                            <!-- Sample CSV Download -->
+                            <div class="mb-4">
+                                <h6><i class="fas fa-download me-2"></i>Need a template?</h6>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="downloadSampleCSV()">
+                                    <i class="fas fa-file-download me-2"></i>Download Sample CSV
+                                </button>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                                    <i class="fas fa-cogs me-2"></i>Process Batch Predictions
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Processing Instructions -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-lightbulb me-2"></i>Processing Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6><i class="fas fa-clock me-2"></i>Processing Time</h6>
+                                <p class="text-muted">Approximately 1-2 seconds per patient</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6><i class="fas fa-database me-2"></i>File Size Limit</h6>
+                                <p class="text-muted">Maximum 16MB (≈10,000 patients)</p>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6><i class="fas fa-shield-alt me-2"></i>Data Security</h6>
+                                <p class="text-muted">Files are processed securely and not permanently stored</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6><i class="fas fa-download me-2"></i>Results</h6>
+                                <p class="text-muted">Download results as CSV or view in browser</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // File upload handling
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('file');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const submitBtn = document.getElementById('submitBtn');
+
+        // Drag and drop functionality
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                handleFileSelect();
+            }
+        });
+
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', handleFileSelect);
+
+        function handleFileSelect() {
+            const file = fileInput.files[0];
+            if (file) {
+                fileName.textContent = file.name;
+                fileSize.textContent = formatFileSize(file.size);
+                fileInfo.style.display = 'block';
+                
+                // Validate file type
+                if (!file.name.toLowerCase().endsWith('.csv')) {
+                    alert('Please select a CSV file');
+                    fileInput.value = '';
+                    fileInfo.style.display = 'none';
+                    return;
+                }
+            }
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // Form submission handling
+        document.getElementById('batchForm').addEventListener('submit', function(e) {
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+            submitBtn.disabled = true;
+        });
+
+        // Sample CSV download
+        function downloadSampleCSV() {
+            const csvContent = `patient_id,age,sex,fever_new,headache_new,bleeding_gums,bleeding_from_eyes,vomiting_new,diarrhea_new,muscle_pain,joint_pain_arthritis,sore_throat,cough_new,difficulty_breathing,contact_with_source_case_new,direct_contact_probable_case,state_residence_new
+Patient_001,35,1,1,1,0,0,1,0,1,0,1,0,0,0,0,LAGOS
+Patient_002,28,0,1,1,1,1,0,1,0,1,0,1,0,1,1,EDO
+Patient_003,42,1,0,1,0,0,0,0,1,1,0,0,1,0,0,KANO`;
+            
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'lassa_fever_sample.csv';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
