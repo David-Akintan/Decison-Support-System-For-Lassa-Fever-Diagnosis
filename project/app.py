@@ -13,7 +13,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
-from models import HybridGNN, GCNNet, GATNet
+from .models import HybridGNN, GCNNet, GATNet
 # from preprocess import build_feature_set  # Not needed for enhanced app
 import torch.nn.functional as F
 from sklearn.metrics import confusion_matrix, classification_report, roc_curve, auc
