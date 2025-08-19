@@ -7,7 +7,7 @@ from torch_geometric.nn.pool import TopKPooling
 from torch_geometric.utils import dropout_adj
 import math
 
-class EnhancedGCNNet(nn.Module):
+class GCNNet(nn.Module):
     def __init__(self, in_channels, hidden_channels=128, out_channels=2, num_layers=3, dropout=0.3):
         super().__init__()
         self.num_layers = num_layers
@@ -96,7 +96,7 @@ class EnhancedGCNNet(nn.Module):
         
         return logits
 
-class EnhancedGATNet(nn.Module):
+class GATNet(nn.Module):
     def __init__(self, in_channels, hidden_channels=128, out_channels=2, num_layers=3, dropout=0.3, heads=4):
         super().__init__()
         self.num_layers = num_layers
@@ -175,7 +175,7 @@ class EnhancedGATNet(nn.Module):
         
         return logits
 
-class SuperiorHybridGNN(nn.Module):
+class HybridGNN(nn.Module):
     def __init__(self, in_channels, hidden_channels=128, out_channels=2, num_layers=3, 
                  dropout=0.3, fusion_method='medical_attention'):
         super().__init__()
@@ -183,8 +183,8 @@ class SuperiorHybridGNN(nn.Module):
         self.hidden_channels = hidden_channels
         
         # Enhanced component networks
-        self.gcn = EnhancedGCNNet(in_channels, hidden_channels, hidden_channels, num_layers, dropout)
-        self.gat = EnhancedGATNet(in_channels, hidden_channels, hidden_channels, num_layers, dropout)
+        self.gcn = GCNNet(in_channels, hidden_channels, hidden_channels, num_layers, dropout)
+        self.gat = GATNet(in_channels, hidden_channels, hidden_channels, num_layers, dropout)
         
         # Medical domain fusion mechanisms
         if fusion_method == 'medical_attention':
@@ -287,34 +287,34 @@ class SuperiorHybridGNN(nn.Module):
         return logits
 
 # Legacy compatibility - enhanced versions
-class GCNNet(EnhancedGCNNet):
-    def __init__(self, in_channels, hidden_channels=128, out_channels=2, num_layers=3, dropout=0.3):
-        super().__init__(in_channels, hidden_channels, out_channels, num_layers, dropout)
+# class GCNNet(EnhancedGCNNet):
+#     def __init__(self, in_channels, hidden_channels=128, out_channels=2, num_layers=3, dropout=0.3):
+#         super().__init__(in_channels, hidden_channels, out_channels, num_layers, dropout)
 
-class GATNet(EnhancedGATNet):
-    def __init__(self, in_channels, hidden_channels=128, out_channels=2, num_layers=3, dropout=0.3):
-        super().__init__(in_channels, hidden_channels, out_channels, num_layers, dropout)
+# class GATNet(EnhancedGATNet):
+#     def __init__(self, in_channels, hidden_channels=128, out_channels=2, num_layers=3, dropout=0.3):
+#         super().__init__(in_channels, hidden_channels, out_channels, num_layers, dropout)
 
-class AdvancedHybridGNN(SuperiorHybridGNN):
-    def __init__(self, in_channels, hidden_channels=128, out_channels=2, num_layers=3, 
-                 dropout=0.3, fusion_method='medical_attention'):
-        # Map old fusion methods to new enhanced ones
-        fusion_mapping = {
-            'advanced_attention': 'medical_attention',
-            'cross_attention': 'clinical_weighting',
-            'gated_fusion': 'adaptive_gating'
-        }
-        new_fusion_method = fusion_mapping.get(fusion_method, 'medical_attention')
-        super().__init__(in_channels, hidden_channels, out_channels, num_layers, dropout, new_fusion_method)
+# class AdvancedHybridGNN(SuperiorHybridGNN):
+#     def __init__(self, in_channels, hidden_channels=128, out_channels=2, num_layers=3, 
+#                  dropout=0.3, fusion_method='medical_attention'):
+#         # Map old fusion methods to new enhanced ones
+#         fusion_mapping = {
+#             'advanced_attention': 'medical_attention',
+#             'cross_attention': 'clinical_weighting',
+#             'gated_fusion': 'adaptive_gating'
+#         }
+#         new_fusion_method = fusion_mapping.get(fusion_method, 'medical_attention')
+#         super().__init__(in_channels, hidden_channels, out_channels, num_layers, dropout, new_fusion_method)
 
-class HybridGNN(SuperiorHybridGNN):
-    def __init__(self, in_channels, hidden_channels=128, out_channels=2, num_layers=3, 
-                 dropout=0.3, fusion_method='attention'):
-        # Map old fusion methods to new enhanced ones
-        fusion_mapping = {
-            'attention': 'medical_attention',
-            'concat': 'adaptive_gating',
-            'weighted': 'clinical_weighting'
-        }
-        new_fusion_method = fusion_mapping.get(fusion_method, 'medical_attention')
-        super().__init__(in_channels, hidden_channels, out_channels, num_layers, dropout, new_fusion_method)
+# class HybridGNN(SuperiorHybridGNN):
+#     def __init__(self, in_channels, hidden_channels=128, out_channels=2, num_layers=3, 
+#                  dropout=0.3, fusion_method='attention'):
+#         # Map old fusion methods to new enhanced ones
+#         fusion_mapping = {
+#             'attention': 'medical_attention',
+#             'concat': 'adaptive_gating',
+#             'weighted': 'clinical_weighting'
+#         }
+#         new_fusion_method = fusion_mapping.get(fusion_method, 'medical_attention')
+#         super().__init__(in_channels, hidden_channels, out_channels, num_layers, dropout, new_fusion_method)

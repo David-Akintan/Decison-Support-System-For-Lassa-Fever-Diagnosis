@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: lassa-fever-diagnosis
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --bind 0.0.0.0:$PORT project.app_enhanced:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.12
+      - key: FLASK_ENV
+        value: production
+      - key: FLASK_APP
+        value: project.app_enhanced.py

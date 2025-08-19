@@ -167,104 +167,127 @@ def intelligent_feature_engineering(df, target_col):
     
     return df
 
-def enhanced_preprocessing_pipeline(df, target_col, test_size=0.2):
-    """Complete enhanced preprocessing pipeline"""
-    print("=== Enhanced Preprocessing Pipeline ===")
+def enhanced_preprocessing_pipeline(df, target_col, test_size=0.2, max_numerical_features=50):
+    """Complete enhanced preprocessing pipeline with memory optimizations"""
+    print("=== Starting Enhanced Preprocessing Pipeline ===")
     
-    # Step 1: Data quality improvement
+    # Make a copy to avoid modifying original
+    df = df.copy()
+    
+    # 1. Initial data quality check
     df = enhanced_data_quality_check(df, target_col)
     
-    # Step 2: Feature engineering
+    # 2. Handle datetime columns - convert to numerical or drop
+    datetime_cols = df.select_dtypes(include=['datetime64', 'timedelta64']).columns.tolist()
+    for col in datetime_cols:
+        try:
+            # Try converting to days since epoch
+            df[col] = (df[col] - pd.Timestamp('1970-01-01')) // pd.Timedelta('1d')
+            print(f"Converted datetime column '{col}' to days since epoch")
+        except:
+            # If conversion fails, drop the column
+            df = df.drop(columns=[col])
+            print(f"Dropped unprocessable datetime column: {col}")
+    
+    # 3. Handle target variable
+    if target_col in df.columns:
+        y = (df[target_col] == 'POSITIVE').astype(int).values
+        df = df.drop(columns=[target_col])
+    else:
+        y = None
+    
+    # 4. Feature engineering
     df = intelligent_feature_engineering(df, target_col)
     
-    # Step 3: Handle target variable
-    if target_col in df.columns:
-        # Clean target labels
-        df[target_col] = df[target_col].astype(str).str.upper().str.strip()
-        
-        # Remove pending/unknown cases for training
-        valid_labels = ['POSITIVE', 'NEGATIVE', 'POS', 'NEG', '1', '0', 'TRUE', 'FALSE']
-        mask = df[target_col].isin(valid_labels)
-        df = df[mask]
-        print(f"Filtered to {df.shape[0]} samples with valid labels")
-        
-        # Binary encoding
-        positive_values = {'POSITIVE', 'POS', '1', 'TRUE'}
-        df['binary_label'] = df[target_col].apply(lambda x: 1 if x in positive_values else 0)
-        
-        print(f"Final label distribution:\n{df['binary_label'].value_counts()}")
-    
-    # Step 4: Feature selection and cleaning
-    # Remove ID columns and other non-predictive features
-    id_patterns = ['id', 'uid', 'key', 'index', 'serial', 'number']
-    id_cols = [col for col in df.columns if any(pattern in col.lower() for pattern in id_patterns)]
-    
-    # Remove date columns that were converted to features
-    date_cols = [col for col in df.columns if df[col].dtype == 'datetime64[ns]']
-    
-    cols_to_remove = list(set(id_cols + date_cols + [target_col]))
-    feature_cols = [col for col in df.columns if col not in cols_to_remove and col != 'binary_label']
-    
-    print(f"Selected {len(feature_cols)} feature columns")
-    
-    # Step 5: Handle missing values intelligently
-    # Separate numerical and categorical features
-    numerical_features = df[feature_cols].select_dtypes(include=[np.number]).columns.tolist()
-    categorical_features = df[feature_cols].select_dtypes(include=['object', 'category']).columns.tolist()
-    
-    # Advanced imputation for numerical features
-    if numerical_features:
-        # Use KNN imputation for better handling of missing values
-        knn_imputer = KNNImputer(n_neighbors=5)
-        df[numerical_features] = knn_imputer.fit_transform(df[numerical_features])
-        print(f"Applied KNN imputation to {len(numerical_features)} numerical features")
-    
-    # Imputation for categorical features
-    if categorical_features:
-        for col in categorical_features:
-            # Use mode for categorical variables
-            mode_value = df[col].mode()
-            if len(mode_value) > 0:
-                df[col] = df[col].fillna(mode_value[0])
-            else:
-                df[col] = df[col].fillna('unknown')
-        print(f"Applied mode imputation to {len(categorical_features)} categorical features")
-    
-    # Step 6: Encoding
+    # 5. Handle categorical features - use memory efficient encoding
+    categorical_cols = df.select_dtypes(include=['object', 'category']).columns.tolist()
     encoders = {}
     
-    for col in categorical_features:
-        if col in df.columns:
-            # Use label encoding for categorical variables
-            le = LabelEncoder()
-            df[col] = le.fit_transform(df[col].astype(str))
-            encoders[col] = le
+    for col in categorical_cols:
+        if col in df.columns:  # Check if column still exists
+            try:
+                le = LabelEncoder()
+                df[col] = le.fit_transform(df[col].astype(str))
+                encoders[col] = le
+            except Exception as e:
+                print(f"Error encoding column {col}: {str(e)}. Dropping column.")
+                df = df.drop(columns=[col])
     
-    # Step 7: Feature scaling
-    scaler = RobustScaler()  # More robust to outliers than StandardScaler
-    feature_matrix = df[feature_cols].values
-    feature_matrix_scaled = scaler.fit_transform(feature_matrix)
+    # 6. Feature selection - reduce dimensionality before imputation
+    numerical_cols = df.select_dtypes(include=['int64', 'float64', 'int32', 'float32']).columns.tolist()
     
-    # Step 8: Final feature selection based on variance
-    # Remove low-variance features
-    from sklearn.feature_selection import VarianceThreshold
-    variance_selector = VarianceThreshold(threshold=0.01)
-    feature_matrix_final = variance_selector.fit_transform(feature_matrix_scaled)
+    # Select top k features by variance
+    if len(numerical_cols) > max_numerical_features:
+        from sklearn.feature_selection import VarianceThreshold
+        selector = VarianceThreshold(threshold=0.01)  # Remove low-variance features
+        try:
+            X_temp = selector.fit_transform(df[numerical_cols])
+            selected_features = [col for col, mask in zip(numerical_cols, selector.get_support()) if mask]
+            print(f"Selected {len(selected_features)}/{len(numerical_cols)} numerical features")
+        except Exception as e:
+            print(f"Error in variance thresholding: {str(e)}. Using all numerical features.")
+            selected_features = numerical_cols
+    else:
+        selected_features = numerical_cols
     
-    selected_feature_indices = variance_selector.get_support(indices=True)
-    final_feature_names = [feature_cols[i] for i in selected_feature_indices]
+    # 7. Memory-efficient imputation
+    print("Handling missing values...")
     
-    print(f"Final feature count after variance filtering: {len(final_feature_names)}")
+    # For categorical features, use mode imputation
+    for col in categorical_cols:
+        if col in df.columns:  # Check if column still exists
+            try:
+                mode_val = df[col].mode()[0] if not df[col].empty else 0
+                df[col] = df[col].fillna(mode_val)
+            except:
+                df[col] = df[col].fillna(0)
+    
+    # For numerical features, use SimpleImputer with median strategy
+    if selected_features:
+        try:
+            imputer = SimpleImputer(strategy='median')
+            df[selected_features] = imputer.fit_transform(df[selected_features])
+        except Exception as e:
+            print(f"Error in numerical imputation: {str(e)}")
+            # Try with mean if median fails
+            try:
+                imputer = SimpleImputer(strategy='mean')
+                df[selected_features] = imputer.fit_transform(df[selected_features])
+            except:
+                # If all else fails, fill with 0
+                df[selected_features] = df[selected_features].fillna(0)
+    
+    # 8. Feature scaling - only on numerical features
+    print("Scaling features...")
+    try:
+        scaler = RobustScaler()  # Less sensitive to outliers than StandardScaler
+        X_scaled = scaler.fit_transform(df[selected_features])
+    except Exception as e:
+        print(f"Error in scaling: {str(e)}. Using original values.")
+        X_scaled = df[selected_features].values
+    
+    # 9. Final feature selection using mutual information
+    if y is not None and X_scaled.shape[1] > max_numerical_features and len(np.unique(y)) > 1:
+        try:
+            from sklearn.feature_selection import SelectKBest, mutual_info_classif
+            
+            selector = SelectKBest(score_func=mutual_info_classif, k=max_numerical_features)
+            X_scaled = selector.fit_transform(X_scaled, y)
+            selected_features = [selected_features[i] for i in selector.get_support(indices=True)]
+            print(f"Selected {len(selected_features)} features using mutual information")
+        except Exception as e:
+            print(f"Error in feature selection: {str(e)}. Using all features.")
+    
+    print(f"Final feature matrix shape: {X_scaled.shape}")
     
     return {
-        'X': feature_matrix_final,
-        'y': df['binary_label'].values,
-        'feature_names': final_feature_names,
+        'X': X_scaled.astype(np.float32),  # Ensure final output is float32
+        'y': y,
+        'feature_names': selected_features,
         'encoders': encoders,
-        'scaler': scaler,
-        'variance_selector': variance_selector,
-        'original_features': feature_cols,
-        'df': df
+        'scaler': scaler if 'scaler' in locals() else None,
+        'df': df,
+        'variance_selector': selector if 'selector' in locals() else None
     }
 
 def create_enhanced_graph(X, df, k=8, similarity_threshold=0.1):
@@ -520,7 +543,7 @@ def finalize_graph(edges, edge_weights, n_samples):
     return edge_index, edge_weights_tensor
 
 def df_to_pyg_data(csv_path, k=8):
-    """Enhanced data preprocessing pipeline for PyG"""
+    """Enhanced data preprocessing pipeline for PyG with graph validation"""
     print("=== Enhanced PyG Data Preprocessing ===")
     
     # Load data
@@ -532,6 +555,25 @@ def df_to_pyg_data(csv_path, k=8):
     # Create graph
     edge_index, edge_weights = create_enhanced_graph(processed['X'], processed['df'], k=k)
     
+    # Validate graph indices
+    num_nodes = len(processed['X'])
+    if edge_index.max() >= num_nodes:
+        print(f"⚠️  Warning: Found {len(edge_index[edge_index >= num_nodes])} invalid edge indices")
+        print(f"Max node index: {num_nodes-1}, Max edge index: {edge_index.max()}")
+        
+        # Filter out invalid edges
+        valid_mask = (edge_index[0] < num_nodes) & (edge_index[1] < num_nodes)
+        edge_index = edge_index[:, valid_mask]
+        if edge_weights is not None:
+            edge_weights = edge_weights[valid_mask]
+        print(f"Filtered to {edge_index.shape[1]} valid edges")
+    
+    # Ensure graph is connected
+    if edge_index.shape[1] == 0:
+        print("⚠️  Warning: No valid edges found. Creating minimal connectivity...")
+        edge_index = torch.tensor([[0, 1], [1, 0]], dtype=torch.long).t()
+        edge_weights = torch.ones(2) * 0.1
+    
     return {
         'x': processed['X'],
         'y': processed['y'],
@@ -540,6 +582,6 @@ def df_to_pyg_data(csv_path, k=8):
         'features_used': processed['feature_names'],
         'encoders': processed['encoders'],
         'scaler': processed['scaler'],
-        'variance_selector': processed['variance_selector'],
+        'variance_selector': processed.get('variance_selector', None),
         'raw_df': processed['df']
     }

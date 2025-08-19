@@ -7,56 +7,257 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --danger-color: #e74c3c;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --info-color: #3498db;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* Enhanced Navigation */
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%) !important;
+            padding: 1rem 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.4rem;
+            color: white !important;
+            text-decoration: none;
+        }
+
+        .navbar-brand:hover {
+            color: #ecf0f1 !important;
+        }
+
+        .navbar-nav .nav-link {
+            color: rgba(255,255,255,0.9) !important;
+            font-weight: 500;
+            margin: 0 0.5rem;
+            padding: 0.5rem 1rem !important;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .navbar-nav .nav-link:hover,
+        .navbar-nav .nav-link.active {
+            background-color: rgba(255,255,255,0.2);
+            color: white !important;
+            transform: translateY(-1px);
+        }
+
+        .navbar-toggler {
+            border: none;
+            padding: 0.25rem 0.5rem;
+        }
+
+        .navbar-toggler:focus {
+            box-shadow: none;
+        }
+
+        .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.75%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+        }
+
+        /* Dashboard Cards */
         .dashboard-card {
             border-radius: 15px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            border: none;
+            overflow: hidden;
         }
+
         .dashboard-card:hover {
-            transform: translateY(-2px);
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
         }
+
         .stat-card {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
         }
-        .risk-very-high { background-color: #dc3545; color: white; }
-        .risk-high { background-color: #fd7e14; color: white; }
-        .risk-moderate { background-color: #ffc107; color: black; }
-        .risk-low { background-color: #20c997; color: white; }
-        .risk-very-low { background-color: #28a745; color: white; }
-        .navbar-brand {
-            font-weight: bold;
-            color: #2c3e50 !important;
+
+        .stat-card .card-body {
+            padding: 2rem;
         }
+
+        .stat-card i {
+            opacity: 0.8;
+        }
+
+        /* Risk Level Badges */
+        .risk-very-high { 
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+            border-radius: 20px;
+            padding: 0.5rem 1rem;
+        }
+        .risk-high { 
+            background: linear-gradient(135deg, #fd7e14 0%, #e55a00 100%);
+            color: white;
+            border-radius: 20px;
+            padding: 0.5rem 1rem;
+        }
+        .risk-moderate { 
+            background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+            color: black;
+            border-radius: 20px;
+            padding: 0.5rem 1rem;
+        }
+        .risk-low { 
+            background: linear-gradient(135deg, #20c997 0%, #1aa179 100%);
+            color: white;
+            border-radius: 20px;
+            padding: 0.5rem 1rem;
+        }
+        .risk-very-low { 
+            background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+            color: white;
+            border-radius: 20px;
+            padding: 0.5rem 1rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .navbar-brand {
+                font-size: 1.1rem;
+            }
+            
+            .navbar-nav {
+                text-align: center;
+                margin-top: 1rem;
+            }
+            
+            .navbar-nav .nav-link {
+                margin: 0.25rem 0;
+                display: block;
+            }
+
+            .stat-card .card-body {
+                padding: 1.5rem;
+            }
+
+            .stat-card h3 {
+                font-size: 1.8rem;
+            }
+
+            .display-6 {
+                font-size: 2rem;
+            }
+
+            .table-responsive {
+                font-size: 0.9rem;
+            }
+
+            .btn {
+                margin-bottom: 0.5rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .container {
+                padding: 0 10px;
+            }
+
+            .stat-card .card-body {
+                padding: 1rem;
+            }
+
+            .stat-card h3 {
+                font-size: 1.5rem;
+            }
+
+            .card-body {
+                padding: 1rem;
+            }
+        }
+
+        /* Enhanced Progress Bars */
+        .progress {
+            height: 8px;
+            border-radius: 10px;
+            background-color: #e9ecef;
+        }
+
+        .progress-bar {
+            border-radius: 10px;
+        }
+
+        /* Chart Container */
         .chart-container {
             background: white;
-            border-radius: 10px;
-            padding: 20px;
-            margin: 20px 0;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        /* Footer */
+        footer {
+            margin-top: 3rem;
+            background: linear-gradient(135deg, var(--primary-color) 0%, #34495e 100%) !important;
+        }
+
+        /* Quick Action Cards */
+        .quick-action-card {
+            transition: all 0.3s ease;
+            border: none;
+            border-radius: 15px;
+        }
+
+        .quick-action-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+
+        .quick-action-card .btn {
+            border-radius: 25px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
         }
     </style>
 </head>
 <body class="bg-light">
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+    <!-- Enhanced Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
             <a class="navbar-brand" href="{{ url_for('index') }}">
-                <i class="fas fa-virus text-danger me-2"></i>
-                Lassa Fever Decision Support System
+                <i class="fas fa-virus me-2"></i>
+                <span class="d-none d-sm-inline">Lassa Fever Decision Support</span>
+                <span class="d-sm-none">LFDS</span>
             </a>
-            <div class="navbar-nav ms-auto">
-                <a class="nav-link" href="{{ url_for('dashboard') }}">
-                    <i class="fas fa-chart-dashboard me-1"></i>Dashboard
-                </a>
-                <a class="nav-link" href="{{ url_for('predict_form') }}">
-                    <i class="fas fa-user-md me-1"></i>Single Prediction
-                </a>
-                <a class="nav-link" href="{{ url_for('batch_predict_form') }}">
-                    <i class="fas fa-upload me-1"></i>Batch Prediction
-                </a>
-                <a class="nav-link" href="{{ url_for('model_info') }}">
-                    <i class="fas fa-info-circle me-1"></i>Model Info
-                </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <div class="navbar-nav ms-auto">
+                    <a class="nav-link active" href="{{ url_for('dashboard') }}">
+                        <i class="fas fa-chart-dashboard me-1"></i>Dashboard
+                    </a>
+                    <a class="nav-link" href="{{ url_for('predict_form') }}">
+                        <i class="fas fa-user-md me-1"></i>
+                        <span class="d-lg-inline d-none">Single </span>Prediction
+                    </a>
+                    <a class="nav-link" href="{{ url_for('batch_predict_form') }}">
+                        <i class="fas fa-upload me-1"></i>
+                        <span class="d-lg-inline d-none">Batch </span>Upload
+                    </a>
+                    <a class="nav-link" href="{{ url_for('model_info') }}">
+                        <i class="fas fa-info-circle me-1"></i>
+                        <span class="d-lg-inline d-none">Model </span>Info
+                    </a>
+                </div>
             </div>
         </div>
     </nav>
@@ -64,50 +265,50 @@
     <div class="container mt-4">
         <!-- Header -->
         <div class="row mb-4">
-            <div class="col-12">
-                <h1 class="display-6 text-center mb-3">
+            <div class="col-12 text-center">
+                <h1 class="display-6 mb-3">
                     <i class="fas fa-chart-line text-primary me-3"></i>
                     Medical Dashboard
                 </h1>
-                <p class="text-center text-muted">Real-time analytics and prediction insights</p>
+                <p class="text-muted">Real-time analytics and prediction insights</p>
             </div>
         </div>
 
         <!-- Statistics Cards -->
         <div class="row mb-4">
-            <div class="col-md-3 mb-3">
+            <div class="col-lg-3 col-md-6 mb-3">
                 <div class="card dashboard-card stat-card">
                     <div class="card-body text-center">
-                        <i class="fas fa-users fa-2x mb-2"></i>
+                        <i class="fas fa-users fa-2x mb-3"></i>
                         <h3 class="card-title">{{ stats.total_predictions }}</h3>
-                        <p class="card-text">Total Predictions</p>
+                        <p class="card-text mb-0">Total Predictions</p>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3 mb-3">
+            <div class="col-lg-3 col-md-6 mb-3">
                 <div class="card dashboard-card" style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%); color: white;">
                     <div class="card-body text-center">
-                        <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                        <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
                         <h3 class="card-title">{{ stats.positive_predictions }}</h3>
-                        <p class="card-text">Positive Cases</p>
+                        <p class="card-text mb-0">Positive Cases</p>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3 mb-3">
+            <div class="col-lg-3 col-md-6 mb-3">
                 <div class="card dashboard-card" style="background: linear-gradient(135deg, #26de81 0%, #20bf6b 100%); color: white;">
                     <div class="card-body text-center">
-                        <i class="fas fa-check-circle fa-2x mb-2"></i>
+                        <i class="fas fa-check-circle fa-2x mb-3"></i>
                         <h3 class="card-title">{{ stats.negative_predictions }}</h3>
-                        <p class="card-text">Negative Cases</p>
+                        <p class="card-text mb-0">Negative Cases</p>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3 mb-3">
+            <div class="col-lg-3 col-md-6 mb-3">
                 <div class="card dashboard-card" style="background: linear-gradient(135deg, #4834d4 0%, #686de0 100%); color: white;">
                     <div class="card-body text-center">
-                        <i class="fas fa-percentage fa-2x mb-2"></i>
+                        <i class="fas fa-percentage fa-2x mb-3"></i>
                         <h3 class="card-title">{{ "%.1f"|format(stats.avg_confidence * 100) }}%</h3>
-                        <p class="card-text">Avg Confidence</p>
+                        <p class="card-text mb-0">Avg Confidence</p>
                     </div>
                 </div>
             </div>
@@ -118,14 +319,14 @@
         <div class="row mb-4">
             <div class="col-12">
                 <div class="card dashboard-card">
-                    <div class="card-header">
+                    <div class="card-header bg-transparent border-0">
                         <h5 class="card-title mb-0">
                             <i class="fas fa-chart-area me-2"></i>Analytics Overview
                         </h5>
                     </div>
                     <div class="card-body text-center">
                         <img src="data:image/png;base64,{{ chart_data.dashboard_chart }}" 
-                             class="img-fluid" alt="Dashboard Analytics">
+                             class="img-fluid" alt="Dashboard Analytics" style="max-height: 400px;">
                     </div>
                 </div>
             </div>
@@ -136,23 +337,23 @@
         <div class="row mb-4">
             <div class="col-12">
                 <div class="card dashboard-card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
+                    <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center flex-wrap">
                         <h5 class="card-title mb-0">
                             <i class="fas fa-history me-2"></i>Recent Predictions
                         </h5>
-                        <span class="badge bg-primary">{{ stats.recent_predictions }} this week</span>
+                        <span class="badge bg-primary rounded-pill">{{ stats.recent_predictions }} this week</span>
                     </div>
                     <div class="card-body">
                         {% if recent_predictions %}
                         <div class="table-responsive">
                             <table class="table table-hover">
-                                <thead>
+                                <thead class="table-light">
                                     <tr>
                                         <th>Patient ID</th>
                                         <th>Prediction</th>
                                         <th>Risk Level</th>
-                                        <th>Confidence</th>
-                                        <th>Date</th>
+                                        <th class="d-none d-md-table-cell">Confidence</th>
+                                        <th class="d-none d-lg-table-cell">Date</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -163,11 +364,11 @@
                                         </td>
                                         <td>
                                             {% if pred.prediction == 1 %}
-                                                <span class="badge bg-danger">
+                                                <span class="badge bg-danger rounded-pill">
                                                     <i class="fas fa-virus me-1"></i>Positive
                                                 </span>
                                             {% else %}
-                                                <span class="badge bg-success">
+                                                <span class="badge bg-success rounded-pill">
                                                     <i class="fas fa-check me-1"></i>Negative
                                                 </span>
                                             {% endif %}
@@ -177,17 +378,17 @@
                                                 {{ pred.risk_level }}
                                             </span>
                                         </td>
-                                        <td>
-                                            <div class="progress" style="height: 20px;">
+                                        <td class="d-none d-md-table-cell">
+                                            <div class="progress" style="height: 6px;">
                                                 <div class="progress-bar" role="progressbar" 
                                                      style="width: {{ (pred.confidence * 100)|round }}%"
                                                      aria-valuenow="{{ (pred.confidence * 100)|round }}" 
                                                      aria-valuemin="0" aria-valuemax="100">
-                                                    {{ "%.1f"|format(pred.confidence * 100) }}%
                                                 </div>
                                             </div>
+                                            <small class="text-muted">{{ "%.1f"|format(pred.confidence * 100) }}%</small>
                                         </td>
-                                        <td>
+                                        <td class="d-none d-lg-table-cell">
                                             <small class="text-muted">
                                                 {% if pred.prediction_date %}
                                                     {{ pred.prediction_date.strftime('%Y-%m-%d %H:%M') if pred.prediction_date.strftime else pred.prediction_date|string|truncate(16) }}
@@ -202,10 +403,10 @@
                             </table>
                         </div>
                         {% else %}
-                        <div class="text-center py-4">
+                        <div class="text-center py-5">
                             <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
                             <p class="text-muted">No predictions yet. Start by making your first prediction!</p>
-                            <a href="{{ url_for('predict_form') }}" class="btn btn-primary">
+                            <a href="{{ url_for('predict_form') }}" class="btn btn-primary rounded-pill">
                                 <i class="fas fa-plus me-2"></i>Make Prediction
                             </a>
                         </div>
@@ -217,8 +418,8 @@
 
         <!-- Quick Actions -->
         <div class="row mb-4">
-            <div class="col-md-4 mb-3">
-                <div class="card dashboard-card h-100">
+            <div class="col-lg-4 col-md-6 mb-3">
+                <div class="card dashboard-card quick-action-card h-100">
                     <div class="card-body text-center">
                         <i class="fas fa-user-md fa-3x text-primary mb-3"></i>
                         <h5 class="card-title">Single Patient</h5>
@@ -229,8 +430,8 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-4 mb-3">
-                <div class="card dashboard-card h-100">
+            <div class="col-lg-4 col-md-6 mb-3">
+                <div class="card dashboard-card quick-action-card h-100">
                     <div class="card-body text-center">
                         <i class="fas fa-upload fa-3x text-success mb-3"></i>
                         <h5 class="card-title">Batch Processing</h5>
@@ -241,8 +442,8 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-4 mb-3">
-                <div class="card dashboard-card h-100">
+            <div class="col-lg-4 col-md-12 mb-3">
+                <div class="card dashboard-card quick-action-card h-100">
                     <div class="card-body text-center">
                         <i class="fas fa-cogs fa-3x text-info mb-3"></i>
                         <h5 class="card-title">Model Information</h5>
@@ -256,14 +457,18 @@
         </div>
     </div>
 
-    <!-- Footer -->
-    <footer class="bg-dark text-light py-4 mt-5">
+    <!-- Enhanced Footer -->
+    <footer class="text-light py-4 mt-5">
         <div class="container text-center">
-            <p class="mb-0">
-                <i class="fas fa-shield-virus me-2"></i>
-                Lassa Fever Decision Support System - Enhanced AI-Powered Medical Diagnosis
-            </p>
-            <small class="text-muted">Powered by Advanced Graph Neural Networks</small>
+            <div class="row">
+                <div class="col-md-12">
+                    <p class="mb-2">
+                        <i class="fas fa-shield-virus me-2"></i>
+                        Lassa Fever Decision Support System
+                    </p>
+                    <small class="text-muted">Enhanced AI-Powered Medical Diagnosis | Powered by Advanced Machine Learning</small>
+                </div>
+            </div>
         </div>
     </footer>
 
