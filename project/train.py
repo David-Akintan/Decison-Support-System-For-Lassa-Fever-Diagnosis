@@ -1,4 +1,3 @@
-# train_improved.py - Enhanced training with comprehensive improvements
 import argparse
 import joblib
 import numpy as np
@@ -21,9 +20,199 @@ from imblearn.under_sampling import EditedNearestNeighbours
 from imblearn.combine import SMOTEENN
 import os
 import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import warnings
+warnings.filterwarnings('ignore')
+
+# Set style for better plots
+plt.style.use('default')
+sns.set_palette("husl")
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {DEVICE}")
+
+# ---------- Training Visualizer Class ----------
+class TrainingVisualizer:
+    """Class to handle all training visualizations"""
+    
+    def __init__(self, save_dir="./training_plots"):
+        self.save_dir = save_dir
+        os.makedirs(save_dir, exist_ok=True)
+        print(f"📊 Visualization plots will be saved to: {save_dir}")
+        
+    def plot_training_curves(self, training_history, save_name="training_curves.png"):
+        """Plot training and validation curves"""
+        fig, axes = plt.subplots(2, 2, figsize=(15, 10))
+        fig.suptitle('Training Progress Visualization', fontsize=16, fontweight='bold')
+        
+        epochs = [h['epoch'] for h in training_history]
+        
+        # Loss curve
+        axes[0, 0].plot(epochs, [h['loss'] for h in training_history], 'b-', linewidth=2, label='Training Loss')
+        axes[0, 0].set_title('Training Loss', fontweight='bold')
+        axes[0, 0].set_xlabel('Epoch')
+        axes[0, 0].set_ylabel('Loss')
+        axes[0, 0].grid(True, alpha=0.3)
+        axes[0, 0].legend()
+        
+        # Validation Accuracy
+        axes[0, 1].plot(epochs, [h['val_acc'] for h in training_history], 'g-', linewidth=2, label='Validation Accuracy')
+        axes[0, 1].set_title('Validation Accuracy', fontweight='bold')
+        axes[0, 1].set_xlabel('Epoch')
+        axes[0, 1].set_ylabel('Accuracy')
+        axes[0, 1].grid(True, alpha=0.3)
+        axes[0, 1].legend()
+        
+        # F1 Score
+        axes[1, 0].plot(epochs, [h['val_f1'] for h in training_history], 'r-', linewidth=2, label='Validation F1')
+        axes[1, 0].plot(epochs, [h['minority_f1'] for h in training_history], 'orange', linewidth=2, label='Minority F1')
+        axes[1, 0].set_title('F1 Scores', fontweight='bold')
+        axes[1, 0].set_xlabel('Epoch')
+        axes[1, 0].set_ylabel('F1 Score')
+        axes[1, 0].grid(True, alpha=0.3)
+        axes[1, 0].legend()
+        
+        # Training Summary
+        best_epoch = np.argmax([h['minority_f1'] for h in training_history])
+        axes[1, 1].text(0.5, 0.5, f'Best Performance at Epoch {best_epoch+1}\n'
+                              f'Best Minority F1: {training_history[best_epoch]["minority_f1"]:.4f}\n'
+                              f'Best Validation F1: {training_history[best_epoch]["val_f1"]:.4f}\n'
+                              f'Best Validation Acc: {training_history[best_epoch]["val_acc"]:.4f}',
+                              ha='center', va='center', transform=axes[1, 1].transAxes,
+                              fontsize=11, bbox=dict(boxstyle="round,pad=0.3", facecolor="lightblue"))
+        axes[1, 1].set_title('Training Summary', fontweight='bold')
+        axes[1, 1].axis('off')
+        
+        plt.tight_layout()
+        save_path = os.path.join(self.save_dir, save_name)
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        print(f"📈 Training curves saved to: {save_path}")
+        plt.show()
+        
+    def plot_confusion_matrix(self, y_true, y_pred, save_name="confusion_matrix.png"):
+        """Plot confusion matrix with heatmap"""
+        cm = confusion_matrix(y_true, y_pred)
+        
+        plt.figure(figsize=(8, 6))
+        sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', 
+                   xticklabels=['Negative', 'Lassa Positive'],
+                   yticklabels=['Negative', 'Lassa Positive'])
+        plt.title('Confusion Matrix', fontsize=16, fontweight='bold')
+        plt.xlabel('Predicted Label', fontsize=12)
+        plt.ylabel('True Label', fontsize=12)
+        
+        # Add performance metrics as text
+        accuracy = (cm[0,0] + cm[1,1]) / cm.sum()
+        precision = cm[1,1] / (cm[1,1] + cm[0,1]) if (cm[1,1] + cm[0,1]) > 0 else 0
+        recall = cm[1,1] / (cm[1,1] + cm[1,0]) if (cm[1,1] + cm[1,0]) > 0 else 0
+        f1 = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
+        
+        plt.text(0.02, 0.98, f'Accuracy: {accuracy:.3f}\nPrecision: {precision:.3f}\nRecall: {recall:.3f}\nF1: {f1:.3f}',
+                transform=plt.gca().transAxes, verticalalignment='top',
+                bbox=dict(boxstyle="round,pad=0.3", facecolor="lightgreen"))
+        
+        plt.tight_layout()
+        save_path = os.path.join(self.save_dir, save_name)
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        print(f"📊 Confusion matrix saved to: {save_path}")
+        plt.show()
+        
+    def plot_roc_curve(self, y_true, y_probs, save_name="roc_curve.png"):
+        """Plot ROC curve"""
+        from sklearn.metrics import roc_curve, auc
+        fpr, tpr, _ = roc_curve(y_true, y_probs[:, 1])
+        roc_auc = auc(fpr, tpr)
+        
+        plt.figure(figsize=(8, 6))
+        plt.plot(fpr, tpr, color='darkorange', lw=2, 
+                label=f'ROC curve (AUC = {roc_auc:.3f})')
+        plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+        plt.xlim([0.0, 1.0])
+        plt.ylim([0.0, 1.05])
+        plt.xlabel('False Positive Rate', fontsize=12)
+        plt.ylabel('True Positive Rate', fontsize=12)
+        plt.title('Receiver Operating Characteristic (ROC) Curve', fontsize=16, fontweight='bold')
+        plt.legend(loc="lower right")
+        plt.grid(True, alpha=0.3)
+        
+        plt.tight_layout()
+        save_path = os.path.join(self.save_dir, save_name)
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        print(f"📈 ROC curve saved to: {save_path}")
+        plt.show()
+        
+    def plot_precision_recall_curve(self, y_true, y_probs, save_name="pr_curve.png"):
+        """Plot Precision-Recall curve"""
+        from sklearn.metrics import precision_recall_curve, average_precision_score
+        precision, recall, _ = precision_recall_curve(y_true, y_probs[:, 1])
+        avg_precision = average_precision_score(y_true, y_probs[:, 1])
+        
+        plt.figure(figsize=(8, 6))
+        plt.plot(recall, precision, color='blue', lw=2, 
+                label=f'PR curve (AP = {avg_precision:.3f})')
+        plt.xlabel('Recall', fontsize=12)
+        plt.ylabel('Precision', fontsize=12)
+        plt.title('Precision-Recall Curve', fontsize=16, fontweight='bold')
+        plt.legend(loc="lower left")
+        plt.grid(True, alpha=0.3)
+        
+        plt.tight_layout()
+        save_path = os.path.join(self.save_dir, save_name)
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        print(f"📈 Precision-Recall curve saved to: {save_path}")
+        plt.show()
+        
+    def plot_feature_importance(self, feature_names, importance_scores, save_name="feature_importance.png"):
+        """Plot feature importance scores"""
+        # Sort features by importance
+        sorted_indices = np.argsort(importance_scores)[::-1]
+        sorted_features = [feature_names[i] for i in sorted_indices]
+        sorted_scores = importance_scores[sorted_indices]
+        
+        # Plot top 20 features
+        top_n = min(20, len(sorted_features))
+        plt.figure(figsize=(12, 8))
+        bars = plt.barh(range(top_n), sorted_scores[:top_n], color='skyblue', edgecolor='navy')
+        
+        plt.yticks(range(top_n), sorted_features[:top_n])
+        plt.xlabel('Importance Score', fontsize=12)
+        plt.title('Top Feature Importance Scores', fontsize=16, fontweight='bold')
+        plt.gca().invert_yaxis()
+        
+        # Add value labels on bars
+        for i, (bar, score) in enumerate(zip(bars, sorted_scores[:top_n])):
+            plt.text(bar.get_width() + 0.001, bar.get_y() + bar.get_height()/2, 
+                    f'{score:.3f}', ha='left', va='center', fontsize=10)
+        
+        plt.tight_layout()
+        save_path = os.path.join(self.save_dir, save_name)
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        print(f"📈 Feature importance plot saved to: {save_path}")
+        plt.show()
+        
+    def plot_model_performance_summary(self, test_metrics, save_name="performance_summary.png"):
+        """Plot comprehensive performance summary"""
+        metrics = list(test_metrics.keys())
+        values = list(test_metrics.values())
+        
+        plt.figure(figsize=(10, 6))
+        bars = plt.bar(metrics, values, color=['skyblue', 'lightgreen', 'lightcoral', 'gold'])
+        plt.title('Model Performance Summary', fontsize=16, fontweight='bold')
+        plt.ylabel('Score', fontsize=12)
+        plt.ylim(0, 1)
+        
+        # Add value labels on bars
+        for bar, value in zip(bars, values):
+            plt.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.01,
+                    f'{value:.3f}', ha='center', va='bottom', fontsize=12, fontweight='bold')
+        
+        plt.grid(True, alpha=0.3, axis='y')
+        plt.tight_layout()
+        save_path = os.path.join(self.save_dir, save_name)
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        print(f"📊 Performance summary saved to: {save_path}")
+        plt.show()
 
 # ---------- Enhanced Feature Engineering ----------
 def advanced_feature_engineering(df, target_col):
@@ -178,9 +367,12 @@ def enhanced_train_v2(
     validation_split=0.25,  # Larger validation set
     test_split=0.2
 ):
-    """Enhanced training with comprehensive improvements"""
-    print("=== Enhanced GNN Training v2 for Lassa Fever Diagnosis ===")
-    print("Implementing advanced improvements...")
+    """Enhanced training with comprehensive improvements and visualization"""
+    print("=== Enhanced GNN Training v2 with Visualization for Lassa Fever Diagnosis ===")
+    print("Implementing advanced improvements and comprehensive visualization...")
+    
+    # Initialize visualizer
+    visualizer = TrainingVisualizer()
     
     # Load raw data for feature engineering
     df = pd.read_csv(csv_path)
@@ -348,7 +540,7 @@ def enhanced_train_v2(
     patience_counter = 0
     training_history = []
     
-    print("Starting enhanced training...")
+    print("Starting enhanced training with visualization...")
     
     for epoch in range(epochs):
         # Training
@@ -433,7 +625,7 @@ def enhanced_train_v2(
     print(f"\n=== Enhanced Training Complete ===")
     print(f"Best Minority F1: {best_f1:.4f}")
     
-    # Final evaluation
+    # Final evaluation with comprehensive visualization
     if os.path.exists(model_out):
         checkpoint = torch.load(model_out, map_location=DEVICE, weights_only=False)
         model.load_state_dict(checkpoint['model_state_dict'])
@@ -443,22 +635,71 @@ def enhanced_train_v2(
             test_logits = model(data.x, data.edge_index)
             test_pred = torch.argmax(test_logits[data.test_mask], dim=1)
             test_true = data.y[data.test_mask]
+            test_probs = torch.softmax(test_logits[data.test_mask], dim=1)
             
             test_acc = (test_pred == test_true).float().mean().item()
             test_f1 = f1_score(test_true.cpu(), test_pred.cpu(), average='macro')
             test_minority_f1 = f1_score(test_true.cpu(), test_pred.cpu(), pos_label=1, average='binary')
+            test_precision = precision_score(test_true.cpu(), test_pred.cpu(), average='macro')
+            test_recall = recall_score(test_true.cpu(), test_pred.cpu(), average='macro')
             
             print(f"\n=== Final Test Results ===")
             print(f"Test Accuracy: {test_acc:.4f}")
             print(f"Test F1 (Macro): {test_f1:.4f}")
             print(f"Test Minority F1: {test_minority_f1:.4f}")
+            print(f"Test Precision: {test_precision:.4f}")
+            print(f"Test Recall: {test_recall:.4f}")
             
             # Detailed classification report
             print("\nDetailed Classification Report:")
             print(classification_report(test_true.cpu(), test_pred.cpu(), 
                                       target_names=['Negative', 'Lassa Positive']))
+            
+            # Generate comprehensive visualizations
+            print("\n📊 Generating comprehensive visualizations...")
+            
+            # 1. Training curves
+            visualizer.plot_training_curves(training_history)
+            
+            # 2. Confusion matrix
+            visualizer.plot_confusion_matrix(test_true.cpu().numpy(), test_pred.cpu().numpy())
+            
+            # 3. ROC curve
+            visualizer.plot_roc_curve(test_true.cpu().numpy(), test_probs.cpu().numpy())
+            
+            # 4. Precision-Recall curve
+            visualizer.plot_precision_recall_curve(test_true.cpu().numpy(), test_probs.cpu().numpy())
+            
+            # 5. Performance summary
+            performance_metrics = {
+                'Accuracy': test_acc,
+                'F1 Score': test_f1,
+                'Precision': test_precision,
+                'Recall': test_recall
+            }
+            visualizer.plot_model_performance_summary(performance_metrics)
+            
+            # 6. Feature importance (if available)
+            if hasattr(model, 'feature_importance'):
+                try:
+                    with torch.no_grad():
+                        feature_imp = model.feature_importance(data.x, data.edge_index, data.edge_attr)
+                        feature_imp = torch.sigmoid(feature_imp).mean(dim=0).cpu().numpy()
+                        feature_names = parsed.get('features_used', [f'Feature_{i}' for i in range(len(feature_imp))])
+                        visualizer.plot_feature_importance(feature_names, feature_imp)
+                except Exception as e:
+                    print(f"Feature importance visualization skipped: {e}")
+            
+            print(f"\n📈 All visualizations completed and saved!")
+            print(f"📂 Check the '{visualizer.save_dir}' directory for all plots")
     
-    return model, {'test_acc': test_acc, 'test_f1': test_f1, 'minority_f1': test_minority_f1}, training_history
+    return model, {
+        'test_acc': test_acc, 
+        'test_f1': test_f1, 
+        'minority_f1': test_minority_f1,
+        'test_precision': test_precision,
+        'test_recall': test_recall
+    }, training_history
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Enhanced GNN Training v2")

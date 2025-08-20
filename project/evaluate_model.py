@@ -40,17 +40,14 @@ def comprehensive_model_evaluation(model_path, preproc_path, csv_path, device='c
     model_type = model_config.get('model_type', 'hybrid')
     
     if model_type == 'hybrid':
-        from models import AdvancedHybridGNN
-        model = AdvancedHybridGNN(**model_config).to(device)
+        from models import HybridGNN
+        model = HybridGNN(**model_config).to(device)
     elif model_type == 'gcn':
-        from models import ImprovedGCNNet
-        model = ImprovedGCNNet(**model_config).to(device)
+        from models import GCNNet
+        model = GCNNet(**model_config).to(device)
     elif model_type == 'gat':
-        from models import ImprovedGATNet
-        model = ImprovedGATNet(**model_config).to(device)
-    elif model_type == 'ensemble':
-        from models import EnsembleGNN
-        model = EnsembleGNN(**model_config).to(device)
+        from models import GATNet
+        model = GATNet(**model_config).to(device)
     else:
         raise ValueError(f"Unknown model type: {model_type}")
     

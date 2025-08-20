@@ -3,40 +3,287 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Batch Prediction - Lassa Fever Decision Support</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <title>Hybrid GNN Batch Analysis - Lassa Fever Decision Support</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --warning-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            --danger-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            --glass-bg: rgba(255, 255, 255, 0.25);
+            --glass-border: rgba(255, 255, 255, 0.18);
+            --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+            --shadow-xl: 0 20px 25px rgba(0,0,0,0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--primary-gradient);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.05)"/><circle cx="20" cy="60" r="0.5" fill="rgba(255,255,255,0.05)"/><circle cx="80" cy="40" r="0.5" fill="rgba(255,255,255,0.05)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .navbar {
+            background: var(--glass-bg) !important;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            position: relative;
+            z-index: 1000;
+        }
+
+        .navbar-brand, .nav-link {
+            color: white !important;
+            font-weight: 600;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: rgba(255,255,255,0.8) !important;
+            text-decoration: underline;
+        }
+
         .upload-area {
-            border: 2px dashed #007bff;
-            border-radius: 10px;
-            padding: 40px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 2px dashed var(--glass-border);
+            border-radius: 24px;
+            padding: 3rem 2rem;
             text-align: center;
-            background: #f8f9fa;
-            transition: all 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
         }
+
+        .upload-area::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+
+        .upload-area:hover::before {
+            opacity: 1;
+        }
+
         .upload-area:hover {
-            border-color: #0056b3;
-            background: #e3f2fd;
+            transform: translateY(-5px) scale(1.02);
+            border-color: rgba(79, 172, 254, 0.5);
+            box-shadow: var(--shadow-xl);
         }
+
         .upload-area.dragover {
-            border-color: #28a745;
-            background: #d4edda;
+            border-color: rgba(67, 233, 123, 0.8);
+            background: var(--warning-gradient);
+            transform: scale(1.05);
+        }
+
+        .upload-area h5, .upload-area p {
+            color: white;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            position: relative;
+            z-index: 1;
+        }
+
+        .upload-area i {
+            color: rgba(79, 172, 254, 0.8);
+            position: relative;
+            z-index: 1;
+        }
+
+        .card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            box-shadow: var(--shadow-lg);
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 10;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .card-header {
+            background: var(--primary-gradient) !important;
+            color: white !important;
+            border-radius: 24px 24px 0 0 !important;
+            border-bottom: 1px solid var(--glass-border) !important;
+            padding: 1.5rem 2rem;
+        }
+
+        .card-body {
+            color: white;
+            padding: 2rem;
+        }
+
+        .card-title {
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .form-label {
+            color: white;
+            font-weight: 600;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .form-control {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            color: white;
+            padding: 12px 16px;
+        }
+
+        .form-control::placeholder {
+            color: rgba(255,255,255,0.6);
+        }
+
+        .form-control:focus {
+            background: var(--glass-bg);
+            border-color: rgba(79, 172, 254, 0.5);
+            color: white;
+            box-shadow: 0 0 0 0.2rem rgba(79, 172, 254, 0.25);
+        }
+
+        .form-text {
+            color: rgba(255,255,255,0.7);
+        }
+
+        .btn {
+            border-radius: 50px;
+            font-weight: 600;
+            padding: 12px 30px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .btn-primary {
+            background: var(--success-gradient);
+            border: none;
+        }
+
+        .btn-outline-primary {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(79, 172, 254, 0.5);
+            color: white;
+        }
+
+        .btn-outline-secondary {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            color: white;
+        }
+
+        .alert {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            color: white;
+        }
+
+        .alert-info {
+            border-left: 4px solid rgba(79, 172, 254, 0.8);
+        }
+
+        .alert-success {
+            border-left: 4px solid rgba(67, 233, 123, 0.8);
+        }
+
+        .alert-danger {
+            border-left: 4px solid rgba(250, 112, 154, 0.8);
+        }
+
+        .text-muted {
+            color: rgba(255,255,255,0.7) !important;
+        }
+
+        h5, h6 {
+            color: white;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        ul li {
+            color: rgba(255,255,255,0.9);
         }
     </style>
 </head>
-<body class="bg-light">
+<body>
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+    <nav class="navbar navbar-expand-lg">
         <div class="container">
             <a class="navbar-brand" href="{{ url_for('index') }}">
-                <i class="fas fa-virus text-danger me-2"></i>
-                Lassa Fever Decision Support System
+                <i class="fas fa-brain text-info me-2"></i>
+                Hybrid GNN Decision Support System
             </a>
             <div class="navbar-nav ms-auto">
                 <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
-                <a class="nav-link" href="{{ url_for('predict_form') }}">Single Prediction</a>
-                <a class="nav-link active" href="{{ url_for('batch_predict_form') }}">Batch Prediction</a>
+                <a class="nav-link" href="{{ url_for('predict_form') }}">Single Analysis</a>
+                <a class="nav-link active" href="{{ url_for('batch_predict_form') }}">Batch Analysis</a>
             </div>
         </div>
     </nav>
@@ -45,9 +292,9 @@
         <div class="row justify-content-center">
             <div class="col-lg-8">
                 <div class="card shadow">
-                    <div class="card-header bg-primary text-white">
+                    <div class="card-header">
                         <h4 class="card-title mb-0">
-                            <i class="fas fa-upload me-2"></i>Batch Prediction Upload
+                            <i class="fas fa-project-diagram me-2"></i>Hybrid GNN Batch Analysis
                         </h4>
                     </div>
                     <div class="card-body">
@@ -77,12 +324,12 @@
                             <!-- File Upload Area -->
                             <div class="mb-4">
                                 <label class="form-label">
-                                    <i class="fas fa-file-csv me-2"></i>Upload Patient Data (CSV)
+                                    <i class="fas fa-database me-2"></i>Upload Patient Dataset (CSV)
                                 </label>
                                 <div class="upload-area" id="uploadArea">
-                                    <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
+                                    <i class="fas fa-cloud-upload-alt fa-3x mb-3"></i>
                                     <h5>Drag & Drop CSV File Here</h5>
-                                    <p class="text-muted mb-3">or click to browse files</p>
+                                    <p class="mb-3">or click to browse files</p>
                                     <input type="file" class="form-control" id="file" name="file" 
                                            accept=".csv" required style="display: none;">
                                     <button type="button" class="btn btn-outline-primary" onclick="document.getElementById('file').click()">
@@ -121,7 +368,7 @@
                             <!-- Submit Button -->
                             <div class="d-grid">
                                 <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
-                                    <i class="fas fa-cogs me-2"></i>Process Batch Predictions
+                                    <i class="fas fa-brain me-2"></i>Run Hybrid GNN Batch Analysis
                                 </button>
                             </div>
                         </form>
@@ -136,22 +383,22 @@
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-6">
-                                <h6><i class="fas fa-clock me-2"></i>Processing Time</h6>
-                                <p class="text-muted">Approximately 1-2 seconds per patient</p>
+                                <h6><i class="fas fa-project-diagram me-2"></i>GNN Processing</h6>
+                                <p class="text-muted">Graph construction + GCN/GAT inference per patient</p>
                             </div>
                             <div class="col-md-6">
-                                <h6><i class="fas fa-database me-2"></i>File Size Limit</h6>
+                                <h6><i class="fas fa-database me-2"></i>Batch Capacity</h6>
                                 <p class="text-muted">Maximum 16MB (≈10,000 patients)</p>
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-md-6">
                                 <h6><i class="fas fa-shield-alt me-2"></i>Data Security</h6>
-                                <p class="text-muted">Files are processed securely and not permanently stored</p>
+                                <p class="text-muted">Secure processing with graph-based privacy protection</p>
                             </div>
                             <div class="col-md-6">
-                                <h6><i class="fas fa-download me-2"></i>Results</h6>
-                                <p class="text-muted">Download results as CSV or view in browser</p>
+                                <h6><i class="fas fa-chart-line me-2"></i>Analysis Output</h6>
+                                <p class="text-muted">Comprehensive results with uncertainty quantification</p>
                             </div>
                         </div>
                     </div>
@@ -223,7 +470,7 @@
 
         // Form submission handling
         document.getElementById('batchForm').addEventListener('submit', function(e) {
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Building Graphs & Running GNN Analysis...';
             submitBtn.disabled = true;
         });
 
