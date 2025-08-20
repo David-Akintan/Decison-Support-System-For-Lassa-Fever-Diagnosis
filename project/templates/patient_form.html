@@ -3,133 +3,90 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hybrid GNN Analysis - Lassa Fever Decision Support</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>Patient Assessment - Lassa Fever Decision Support</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
-            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            --warning-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-            --danger-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-            --glass-bg: rgba(255, 255, 255, 0.25);
-            --glass-border: rgba(255, 255, 255, 0.18);
-            --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
-            --shadow-xl: 0 20px 25px rgba(0,0,0,0.1);
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --danger-color: #e74c3c;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --info-color: #3498db;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%) !important;
+            padding: 1rem 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
 
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.4rem;
+            color: white !important;
+            text-decoration: none;
+        }
+
+        .navbar-brand:hover {
+            color: #ecf0f1 !important;
+        }
+
+        .navbar-nav .nav-link {
+            color: rgba(255,255,255,0.9) !important;
+            font-weight: 500;
+            margin: 0 0.5rem;
+            padding: 0.5rem 1rem !important;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .navbar-nav .nav-link:hover,
+        .navbar-nav .nav-link.active {
+            background-color: rgba(255,255,255,0.2);
+            color: white !important;
+            transform: translateY(-1px);
+        }
+
+        .navbar-toggler {
+            border: none;
+            padding: 0.25rem 0.5rem;
+        }
+
+        .navbar-toggler:focus {
+            box-shadow: none;
+        }
+
+        .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.75%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+        }
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--primary-gradient);
+            /* background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); */
             min-height: 100vh;
-            overflow-x: hidden;
-        }
-
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.05)"/><circle cx="20" cy="60" r="0.5" fill="rgba(255,255,255,0.05)"/><circle cx="80" cy="40" r="0.5" fill="rgba(255,255,255,0.05)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
-            pointer-events: none;
-            z-index: 1;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         .form-container {
-            background: var(--glass-bg);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            border-radius: 32px;
-            box-shadow: var(--shadow-xl);
-            margin: 2rem auto;
-            max-width: 1000px;
-            position: relative;
-            z-index: 10;
-        }
-        
-        .form-header {
-            background: var(--primary-gradient);
-            color: white;
-            border-radius: 32px 32px 0 0;
-            padding: 3rem 2rem;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .form-header::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-            animation: float 6s ease-in-out infinite;
-        }
-        
-        @keyframes float {
-            0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
-            50% { transform: translate(-50%, -50%) rotate(180deg); }
-        }
-        
-        .form-header h2 {
-            font-size: 2.2rem;
-            font-weight: 800;
-            margin-bottom: 1rem;
-            text-shadow: 0 4px 8px rgba(0,0,0,0.3);
-            position: relative;
-            z-index: 1;
-        }
-        
-        .form-header p {
-            font-size: 1.1rem;
-            opacity: 0.9;
-            position: relative;
-            z-index: 1;
-        }
-        
-        .section-header {
-            background: var(--glass-bg);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid var(--glass-border);
-            color: white;
-            padding: 1.5rem;
-            margin: 2rem -2rem 2rem -2rem;
+            background: rgba(255, 255, 255, 0.95);
             border-radius: 20px;
-            position: relative;
-            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            margin: 2rem auto;
+            max-width: 900px;
         }
-        
-        .section-header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-            transition: left 0.6s;
+        .form-header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            border-radius: 20px 20px 0 0;
+            padding: 2rem;
+            text-align: center;
         }
-        
-        .section-header:hover::before {
-            left: 100%;
-        }
-        
-        .section-header h4 {
-            font-weight: 700;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        .section-header {
+            background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+            color: white;
+            padding: 1rem;
+            margin: 2rem -2rem 1rem -2rem;
+            border-radius: 10px;
         }
         .symptom-grid {
             display: grid;
@@ -138,134 +95,82 @@
             margin: 1rem 0;
         }
         .symptom-card {
-            background: var(--glass-bg);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 2px solid var(--glass-border);
-            border-radius: 16px;
-            padding: 1.5rem;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 1rem;
+            transition: all 0.3s ease;
         }
-        
-        .symptom-card::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-            opacity: 0;
-            transition: opacity 0.4s;
-        }
-        
-        .symptom-card:hover::before {
-            opacity: 1;
-        }
-        
         .symptom-card:hover {
-            border-color: rgba(79, 172, 254, 0.6);
-            background: rgba(79, 172, 254, 0.1);
-            transform: translateY(-3px) scale(1.02);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            border-color: #3498db;
+            background: #e3f2fd;
         }
-        
         .symptom-card.selected {
-            border-color: rgba(250, 112, 154, 0.8);
-            background: var(--danger-gradient);
-            color: white;
-            transform: translateY(-5px) scale(1.05);
-            box-shadow: 0 12px 30px rgba(250, 112, 154, 0.3);
-        }
-        
-        .symptom-card.selected .form-check-label {
-            color: white;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            border-color: #e74c3c;
+            background: #ffebee;
         }
         .form-check-input:checked {
             background-color: #e74c3c;
             border-color: #e74c3c;
         }
         .btn-submit {
-            background: var(--success-gradient);
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
             border: none;
-            padding: 18px 50px;
-            border-radius: 50px;
-            font-weight: 700;
-            color: white;
-            font-size: 1.2rem;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .btn-submit::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: left 0.5s;
-        }
-        
-        .btn-submit:hover::before {
-            left: 100%;
-        }
-        
-        .btn-submit:hover {
-            transform: translateY(-5px) scale(1.05);
-            box-shadow: 0 15px 35px rgba(79, 172, 254, 0.4);
-        }
-        
-        .form-control, .form-select {
-            background: var(--glass-bg);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid var(--glass-border);
-            border-radius: 12px;
-            padding: 12px 16px;
-            color: white;
-            font-weight: 500;
-        }
-        
-        .form-control::placeholder {
-            color: rgba(255,255,255,0.7);
-        }
-        
-        .form-control:focus, .form-select:focus {
-            background: var(--glass-bg);
-            border-color: rgba(79, 172, 254, 0.6);
-            box-shadow: 0 0 0 0.2rem rgba(79, 172, 254, 0.25);
-            color: white;
-        }
-        
-        .form-label {
-            color: white;
+            padding: 15px 40px;
+            border-radius: 25px;
             font-weight: 600;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            margin-bottom: 0.75rem;
+            color: white;
+            font-size: 1.1rem;
         }
-        
-        .text-muted {
-            color: rgba(255,255,255,0.7) !important;
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(39, 174, 96, 0.3);
         }
     </style>
 </head>
 <body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                <i class="fas fa-virus me-2"></i>
+                <span class="d-none d-sm-inline">Lassa Fever Decision Support</span>
+                <span class="d-sm-none">LFDS</span>
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <div class="navbar-nav ms-auto">
+                    <a class="nav-link" href="{{ url_for('dashboard') }}">
+                        <i class="fas fa-chart-dashboard me-1"></i>Dashboard
+                    </a>
+                    <a class="nav-link active" href="{{ url_for('predict_form') }}">
+                        <i class="fas fa-user-md me-1"></i>
+                        <span class="d-lg-inline d-none">Single </span>Prediction
+                    </a>
+                    <a class="nav-link" href="{{ url_for('batch_predict_form') }}">
+                        <i class="fas fa-upload me-1"></i>
+                        <span class="d-lg-inline d-none">Batch </span>Upload
+                    </a>
+                    <a class="nav-link" href="{{ url_for('model_info') }}">
+                        <i class="fas fa-info-circle me-1"></i>
+                        <span class="d-lg-inline d-none">Model </span>Info
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
     <div class="container">
         <div class="form-container">
             <!-- Header -->
             <div class="form-header">
                 <h2 class="mb-3">
-                    <i class="fas fa-brain me-3"></i>
-                    Hybrid GNN Patient Analysis
+                    <i class="fas fa-stethoscope me-3"></i>
+                    Patient Assessment Form
                 </h2>
-                <p class="mb-0">Advanced Graph Neural Network analysis of patient clinical data and symptom relationships</p>
+                <p class="mb-0">Enter patient clinical data for Lassa fever risk assessment</p>
             </div>
 
             <!-- Form Content -->
@@ -526,7 +431,7 @@
                             <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
                         </a>
                         <button type="submit" class="btn btn-submit btn-lg">
-                            <i class="fas fa-project-diagram me-2"></i>Run GNN Analysis
+                            <i class="fas fa-brain me-2"></i>Analyze Patient
                         </button>
                     </div>
                 </form>
@@ -596,7 +501,7 @@
             
             // Show loading state
             const submitBtn = document.querySelector('.btn-submit');
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Building Graph & Running GNN...';
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Analyzing...';
             submitBtn.disabled = true;
         });
     </script>

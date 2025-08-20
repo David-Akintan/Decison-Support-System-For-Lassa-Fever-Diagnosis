@@ -286,35 +286,3 @@ class HybridGNN(nn.Module):
         
         return logits
 
-# Legacy compatibility - enhanced versions
-# class GCNNet(EnhancedGCNNet):
-#     def __init__(self, in_channels, hidden_channels=128, out_channels=2, num_layers=3, dropout=0.3):
-#         super().__init__(in_channels, hidden_channels, out_channels, num_layers, dropout)
-
-# class GATNet(EnhancedGATNet):
-#     def __init__(self, in_channels, hidden_channels=128, out_channels=2, num_layers=3, dropout=0.3):
-#         super().__init__(in_channels, hidden_channels, out_channels, num_layers, dropout)
-
-# class AdvancedHybridGNN(SuperiorHybridGNN):
-#     def __init__(self, in_channels, hidden_channels=128, out_channels=2, num_layers=3, 
-#                  dropout=0.3, fusion_method='medical_attention'):
-#         # Map old fusion methods to new enhanced ones
-#         fusion_mapping = {
-#             'advanced_attention': 'medical_attention',
-#             'cross_attention': 'clinical_weighting',
-#             'gated_fusion': 'adaptive_gating'
-#         }
-#         new_fusion_method = fusion_mapping.get(fusion_method, 'medical_attention')
-#         super().__init__(in_channels, hidden_channels, out_channels, num_layers, dropout, new_fusion_method)
-
-# class HybridGNN(SuperiorHybridGNN):
-#     def __init__(self, in_channels, hidden_channels=128, out_channels=2, num_layers=3, 
-#                  dropout=0.3, fusion_method='attention'):
-#         # Map old fusion methods to new enhanced ones
-#         fusion_mapping = {
-#             'attention': 'medical_attention',
-#             'concat': 'adaptive_gating',
-#             'weighted': 'clinical_weighting'
-#         }
-#         new_fusion_method = fusion_mapping.get(fusion_method, 'medical_attention')
-#         super().__init__(in_channels, hidden_channels, out_channels, num_layers, dropout, new_fusion_method)

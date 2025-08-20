@@ -3,160 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hybrid GNN Results - Lassa Fever Decision Support</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>Assessment Results - Lassa Fever Decision Support</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        :root {
-            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            --warning-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-            --danger-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-            --glass-bg: rgba(255, 255, 255, 0.25);
-            --glass-border: rgba(255, 255, 255, 0.18);
-            --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
-            --shadow-xl: 0 20px 25px rgba(0,0,0,0.1);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--primary-gradient);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            overflow-x: hidden;
-        }
-
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.05)"/><circle cx="20" cy="60" r="0.5" fill="rgba(255,255,255,0.05)"/><circle cx="80" cy="40" r="0.5" fill="rgba(255,255,255,0.05)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
-            pointer-events: none;
-            z-index: 1;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         .results-container {
-            background: var(--glass-bg);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            border-radius: 32px;
-            box-shadow: var(--shadow-xl);
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
             margin: 2rem auto;
-            max-width: 1200px;
-            position: relative;
-            z-index: 10;
+            max-width: 1000px;
         }
-        
         .results-header {
-            background: var(--primary-gradient);
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
             color: white;
-            border-radius: 32px 32px 0 0;
-            padding: 3rem 2rem;
+            border-radius: 20px 20px 0 0;
+            padding: 2rem;
             text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .results-header::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-            animation: float 6s ease-in-out infinite;
-        }
-        
-        @keyframes float {
-            0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
-            50% { transform: translate(-50%, -50%) rotate(180deg); }
-        }
-        
-        .results-header h1 {
-            font-size: 2.5rem;
-            font-weight: 800;
-            text-shadow: 0 4px 8px rgba(0,0,0,0.3);
-            position: relative;
-            z-index: 1;
-        }
-        
-        .results-header p {
-            font-size: 1.1rem;
-            opacity: 0.9;
-            position: relative;
-            z-index: 1;
         }
         .diagnosis-card {
-            background: var(--glass-bg);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid var(--glass-border);
-            border-radius: 24px;
-            padding: 3rem 2rem;
+            border-radius: 15px;
+            padding: 2rem;
             margin: 2rem 0;
             text-align: center;
-            box-shadow: var(--shadow-lg);
-            position: relative;
-            overflow: hidden;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
         }
-        
-        .diagnosis-card::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-            opacity: 0;
-            transition: opacity 0.4s;
-        }
-        
-        .diagnosis-card:hover::before {
-            opacity: 1;
-        }
-        
-        .diagnosis-card:hover {
-            transform: translateY(-5px) scale(1.02);
-            box-shadow: var(--shadow-xl);
-        }
-        
         .diagnosis-positive {
-            background: var(--danger-gradient);
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
             color: white;
-            border: 1px solid rgba(250, 112, 154, 0.3);
         }
-        
         .diagnosis-negative {
-            background: var(--success-gradient);
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
             color: white;
-            border: 1px solid rgba(79, 172, 254, 0.3);
-        }
-        
-        .diagnosis-card h2 {
-            font-weight: 800;
-            text-shadow: 0 4px 8px rgba(0,0,0,0.3);
-            position: relative;
-            z-index: 1;
-        }
-        
-        .diagnosis-card p {
-            font-size: 1.2rem;
-            font-weight: 600;
-            position: relative;
-            z-index: 1;
         }
         .risk-badge {
             font-size: 1.2rem;
@@ -179,121 +63,18 @@
         }
         
         .patient-info {
-            background: var(--glass-bg);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid var(--glass-border);
-            border-radius: 20px;
-            padding: 2rem;
-            margin: 2rem 0;
-            color: white;
-            position: relative;
-        }
-        
-        .patient-info h4 {
-            font-weight: 700;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            margin-bottom: 1.5rem;
-        }
-        
-        .patient-info p {
-            font-weight: 500;
-            margin-bottom: 0.75rem;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin: 1rem 0;
         }
         
         .medical-advice {
-            background: var(--glass-bg);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid var(--glass-border);
-            border-left: 4px solid rgba(79, 172, 254, 0.8);
-            padding: 2rem;
-            margin: 2rem 0;
-            border-radius: 20px;
-            color: white;
-        }
-        
-        .medical-advice h5, .medical-advice h6 {
-            font-weight: 700;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
-        
-        .card {
-            background: var(--glass-bg);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid var(--glass-border);
-            border-radius: 20px;
-            transition: all 0.3s ease;
-        }
-        
-        .card:hover {
-            transform: translateY(-3px);
-            box-shadow: var(--shadow-lg);
-        }
-        
-        .card-header {
-            background: var(--glass-bg) !important;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border-bottom: 1px solid var(--glass-border);
-            border-radius: 20px 20px 0 0 !important;
-            color: white !important;
-        }
-        
-        .card-body {
-            color: white;
-        }
-        
-        .alert {
-            background: var(--glass-bg);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid var(--glass-border);
-            border-radius: 15px;
-            color: white;
-        }
-        
-        .btn {
-            border-radius: 50px;
-            font-weight: 600;
-            padding: 12px 30px;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: left 0.5s;
-        }
-        
-        .btn:hover::before {
-            left: 100%;
-        }
-        
-        .btn:hover {
-            transform: translateY(-3px) scale(1.05);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-        }
-        
-        .btn-primary {
-            background: var(--success-gradient);
-            border: none;
-        }
-        
-        .btn-secondary {
-            background: var(--glass-bg);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid var(--glass-border);
-            color: white;
+            background: #e8f4fd;
+            border-left: 4px solid #3498db;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            border-radius: 0 10px 10px 0;
         }
     </style>
 </head>
@@ -302,8 +83,8 @@
         <div class="results-container">
             <!-- Header -->
             <div class="results-header">
-                <h1><i class="fas fa-brain me-3"></i>Hybrid GNN Analysis Results</h1>
-                <p class="mb-0">Graph Neural Network Medical Diagnosis System</p>
+                <h1><i class="fas fa-stethoscope me-3"></i>Assessment Results</h1>
+                <p class="mb-0">Lassa Fever Decision Support System</p>
             </div>
 
             <div class="p-4">
@@ -444,17 +225,9 @@
                         <!-- Original AI advice if available -->
                         {% if result.medical_advice %}
                         <div class="mt-3">
-                            <h6><i class="fas fa-project-diagram me-2"></i>Hybrid GNN Analysis</h6>
+                            <h6><i class="fas fa-robot me-2"></i>AI System Analysis</h6>
                             <div class="border-start border-primary ps-3">
-                                <p><strong>Graph Construction:</strong> Patient data was embedded into a similarity graph with clinical features as nodes and relationships based on symptom patterns.</p>
-                                <p><strong>GCN Analysis:</strong> Graph Convolutional Network captured local neighborhood patterns in the patient similarity space.</p>
-                                <p><strong>GAT Processing:</strong> Graph Attention Network applied multi-head attention to weight important clinical features.</p>
-                                <p><strong>Fusion Result:</strong> Hybrid model combined GCN and GAT outputs with uncertainty quantification for final diagnosis.</p>
-                                {% if result.medical_advice %}
-                                <div class="mt-2">
-                                    <strong>Additional Analysis:</strong> {{ result.medical_advice|safe }}
-                                </div>
-                                {% endif %}
+                                {{ result.medical_advice|safe }}
                             </div>
                         </div>
                         {% endif %}

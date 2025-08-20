@@ -1,0 +1,39 @@
+<!-- Base Navigation Template -->
+<nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container">
+        <a class="navbar-brand" href="{{ url_for('index') }}">
+            <i class="fas fa-brain"></i>
+            <span class="d-none d-sm-inline">Lassa Fever AI</span>
+            <span class="d-sm-none">LFDS</span>
+        </a>
+        
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link {{ 'active' if request.endpoint == 'index' }}" href="{{ url_for('index') }}">
+                    <i class="fas fa-home me-1"></i>
+                    <span class="d-lg-inline d-none">Dashboard</span>
+                    <span class="d-lg-none">Home</span>
+                </a>
+                <a class="nav-link {{ 'active' if request.endpoint == 'patient_form' }}" href="{{ url_for('patient_form') }}">
+                    <i class="fas fa-user-md me-1"></i>
+                    <span class="d-lg-inline d-none">New Analysis</span>
+                    <span class="d-lg-none">Analysis</span>
+                </a>
+                <a class="nav-link {{ 'active' if request.endpoint == 'model_info' }}" href="{{ url_for('model_info') }}">
+                    <i class="fas fa-info-circle me-1"></i>
+                    <span class="d-lg-inline d-none">Model Info</span>
+                    <span class="d-lg-none">Info</span>
+                </a>
+                <a class="nav-link {{ 'active' if request.endpoint == 'evaluate_model' }}" href="{{ url_for('evaluate_model') }}">
+                    <i class="fas fa-chart-line me-1"></i>
+                    <span class="d-lg-inline d-none">Performance</span>
+                    <span class="d-lg-none">Stats</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</nav>

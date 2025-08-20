@@ -3,507 +3,133 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hybrid GNN Model - Lassa Fever Decision Support</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>Model Information - Lassa Fever Decision Support</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
-            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            --warning-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-            --danger-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-            --dark-gradient: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-            --glass-bg: rgba(255, 255, 255, 0.25);
-            --glass-border: rgba(255, 255, 255, 0.18);
-            --text-primary: #2d3748;
-            --text-secondary: #4a5568;
-            --shadow-sm: 0 2px 4px rgba(0,0,0,0.1);
-            --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
-            --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
-            --shadow-xl: 0 20px 25px rgba(0,0,0,0.1);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --danger-color: #e74c3c;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --info-color: #3498db;
         }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            color: var(--text-primary);
-            overflow-x: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
         }
 
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.05)"/><circle cx="20" cy="60" r="0.5" fill="rgba(255,255,255,0.05)"/><circle cx="80" cy="40" r="0.5" fill="rgba(255,255,255,0.05)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
-            pointer-events: none;
-            z-index: 1;
-        }
-
-        /* Glass Morphism Navigation */
+        /* Enhanced Navigation */
         .navbar {
-            background: var(--glass-bg) !important;
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%) !important;
             padding: 1rem 0;
-            box-shadow: var(--shadow-lg);
-            position: relative;
-            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
 
         .navbar-brand {
-            font-weight: 800;
-            font-size: 1.5rem;
+            font-weight: 700;
+            font-size: 1.4rem;
             color: white !important;
             text-decoration: none;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
 
         .navbar-brand:hover {
-            color: rgba(255,255,255,0.9) !important;
-            transform: scale(1.05);
+            color: #ecf0f1 !important;
         }
 
         .navbar-nav .nav-link {
-            color: rgba(255,255,255,0.95) !important;
-            font-weight: 600;
+            color: rgba(255,255,255,0.9) !important;
+            font-weight: 500;
             margin: 0 0.5rem;
-            padding: 0.75rem 1.5rem !important;
-            border-radius: 50px;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .navbar-nav .nav-link::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: left 0.5s;
-        }
-
-        .navbar-nav .nav-link:hover::before {
-            left: 100%;
+            padding: 0.5rem 1rem !important;
+            border-radius: 25px;
+            transition: all 0.3s ease;
         }
 
         .navbar-nav .nav-link:hover,
         .navbar-nav .nav-link.active {
-            background: rgba(255,255,255,0.2);
+            background-color: rgba(255,255,255,0.2);
             color: white !important;
-            transform: translateY(-2px) scale(1.05);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            transform: translateY(-1px);
         }
 
         .navbar-toggler {
-            border: 2px solid rgba(255,255,255,0.3);
-            padding: 0.5rem;
-            border-radius: 12px;
+            border: none;
+            padding: 0.25rem 0.5rem;
         }
 
         .navbar-toggler:focus {
-            box-shadow: 0 0 0 0.2rem rgba(255,255,255,0.25);
+            box-shadow: none;
         }
 
         .navbar-toggler-icon {
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.9%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.75%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
         }
 
         .info-container {
-            background: var(--glass-bg);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            border-radius: 32px;
-            box-shadow: var(--shadow-xl);
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
             margin: 2rem auto;
-            max-width: 1400px;
+            max-width: 1200px;
             overflow: hidden;
-            position: relative;
-            z-index: 10;
         }
 
         .info-header {
-            background: var(--primary-gradient);
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
             color: white;
-            padding: 3rem 2rem;
+            padding: 2rem;
             text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .info-header::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-            animation: float 6s ease-in-out infinite;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
-            50% { transform: translate(-50%, -50%) rotate(180deg); }
-        }
-
-        .info-header h2 {
-            font-size: 2.5rem;
-            font-weight: 800;
-            margin-bottom: 1rem;
-            text-shadow: 0 4px 8px rgba(0,0,0,0.3);
-            position: relative;
-            z-index: 1;
-        }
-
-        .info-header p {
-            font-size: 1.1rem;
-            opacity: 0.9;
-            position: relative;
-            z-index: 1;
         }
 
         .status-card {
-            background: var(--glass-bg);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid var(--glass-border);
-            border-radius: 24px;
-            padding: 3rem 2rem;
-            margin: 2rem 0;
+            border-radius: 15px;
+            padding: 2rem;
+            margin: 1.5rem 0;
             text-align: center;
-            box-shadow: var(--shadow-lg);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .status-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-            transition: left 0.6s;
-        }
-
-        .status-card:hover::before {
-            left: 100%;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
         }
 
         .status-card:hover {
-            transform: translateY(-8px) scale(1.02);
-            box-shadow: var(--shadow-xl);
+            transform: translateY(-3px);
         }
 
         .status-online {
-            background: var(--success-gradient);
+            background: linear-gradient(135deg, var(--success-color) 0%, #2ecc71 100%);
             color: white;
-            border: 1px solid rgba(79, 172, 254, 0.3);
         }
 
         .status-offline {
-            background: var(--danger-gradient);
+            background: linear-gradient(135deg, var(--danger-color) 0%, #c0392b 100%);
             color: white;
-            border: 1px solid rgba(250, 112, 154, 0.3);
-        }
-
-        .status-card h3 {
-            font-size: 1.8rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
-
-        .status-card p {
-            font-size: 1.1rem;
-            opacity: 0.95;
-        }
-
-        /* Architecture Cards */
-        .architecture-section {
-            background: var(--glass-bg);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid var(--glass-border);
-            border-radius: 24px;
-            padding: 3rem 2rem;
-            margin: 2rem 0;
-            position: relative;
-        }
-
-        .section-header {
-            text-align: center;
-            margin-bottom: 3rem;
-            color: white;
-        }
-
-        .section-header h4 {
-            font-size: 2rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        }
-
-        .section-header .lead {
-            font-size: 1.1rem;
-            opacity: 0.9;
-        }
-
-        .architecture-card {
-            background: var(--glass-bg);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid var(--glass-border);
-            border-radius: 20px;
-            padding: 2rem;
-            height: 100%;
-            text-align: center;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-            color: white;
-        }
-
-        .architecture-card::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-            opacity: 0;
-            transition: opacity 0.4s;
-        }
-
-        .architecture-card:hover::before {
-            opacity: 1;
-        }
-
-        .architecture-card:hover {
-            transform: translateY(-10px) scale(1.03);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-        }
-
-        .gcn-card {
-            background: var(--success-gradient);
-        }
-
-        .gat-card {
-            background: var(--warning-gradient);
-        }
-
-        .fusion-card {
-            background: var(--secondary-gradient);
-        }
-
-        .card-icon {
-            font-size: 3.5rem;
-            margin-bottom: 1.5rem;
-            opacity: 0.9;
-        }
-
-        .architecture-card h5 {
-            font-size: 1.3rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
-
-        .architecture-card p {
-            font-size: 0.95rem;
-            opacity: 0.9;
-            margin-bottom: 1.5rem;
-        }
-
-        .tech-details {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            justify-content: center;
-        }
-
-        .tech-tag {
-            background: rgba(255,255,255,0.2);
-            color: white;
-            padding: 0.3rem 0.8rem;
-            border-radius: 15px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            border: 1px solid rgba(255,255,255,0.3);
-        }
-
-        /* Flow Diagram */
-        .architecture-flow-diagram {
-            margin-top: 3rem;
-            padding: 2rem;
-            background: rgba(255,255,255,0.1);
-            border-radius: 20px;
-            backdrop-filter: blur(10px);
-        }
-
-        .flow-step {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-
-        .step-box {
-            background: var(--glass-bg);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--glass-border);
-            border-radius: 15px;
-            padding: 1rem 1.5rem;
-            text-align: center;
-            color: white;
-            min-width: 120px;
-            transition: all 0.3s ease;
-        }
-
-        .step-box:hover {
-            transform: scale(1.05);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-        }
-
-        .step-box i {
-            display: block;
-            font-size: 1.5rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .step-box span {
-            font-size: 0.9rem;
-            font-weight: 600;
-        }
-
-        .flow-arrow {
-            font-size: 1.5rem;
-            color: white;
-            font-weight: bold;
-        }
-
-        .parallel-step {
-            background: var(--primary-gradient);
-        }
-
-        .parallel-branch {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .branch-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.9rem;
-            font-weight: 600;
-        }
-
-        .gcn-branch {
-            color: #4facfe;
-        }
-
-        .gat-branch {
-            color: #43e97b;
         }
 
         .metric-card {
-            background: var(--glass-bg);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid var(--glass-border);
-            border-radius: 20px;
-            padding: 2rem 1.5rem;
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
             margin: 1rem 0;
-            box-shadow: var(--shadow-lg);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
             text-align: center;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            color: white;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .metric-card::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-            opacity: 0;
-            transition: opacity 0.4s;
-        }
-
-        .metric-card:hover::before {
-            opacity: 1;
+            transition: all 0.3s ease;
+            border: none;
         }
 
         .metric-card:hover {
-            transform: translateY(-8px) scale(1.05);
-            box-shadow: var(--shadow-xl);
-        }
-
-        .metric-card i {
-            margin-bottom: 1rem;
-        }
-
-        .metric-card h5 {
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
-
-        .metric-card h3 {
-            font-weight: 800;
-            margin-bottom: 0.5rem;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
         }
 
         .info-card {
-            background: var(--glass-bg);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid var(--glass-border);
-            border-radius: 20px;
-            padding: 2rem;
-            margin: 2rem 0;
-            box-shadow: var(--shadow-lg);
-            color: white;
-            transition: all 0.3s ease;
-        }
-
-        .info-card:hover {
-            transform: translateY(-5px);
-            box-shadow: var(--shadow-xl);
-        }
-
-        .info-card h5 {
-            font-weight: 700;
-            margin-bottom: 1.5rem;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            border: none;
         }
 
         .feature-list {
@@ -709,95 +335,29 @@
                     </p>
                 </div>
 
-                <!-- Enhanced Hybrid GNN Architecture -->
-                <div class="architecture-section">
-                    <div class="section-header">
-                        <h4 class="mb-4"><i class="fas fa-brain me-3"></i>Hybrid Graph Neural Network Architecture</h4>
-                        <p class="lead">Advanced deep learning combining Graph Convolutional Networks and Graph Attention Networks</p>
-                    </div>
-                    
-                    <div class="architecture-flow">
-                        <div class="row g-4">
-                            <div class="col-lg-4 col-md-6">
-                                <div class="architecture-card gcn-card">
-                                    <div class="card-icon">
-                                        <i class="fas fa-project-diagram"></i>
-                                    </div>
-                                    <h5>Graph Convolutional Network</h5>
-                                    <p>Captures local neighborhood patterns through spectral graph convolutions</p>
-                                    <div class="tech-details">
-                                        <span class="tech-tag">3 Layers</span>
-                                        <span class="tech-tag">ReLU Activation</span>
-                                        <span class="tech-tag">Residual Connections</span>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="col-lg-4 col-md-6">
-                                <div class="architecture-card gat-card">
-                                    <div class="card-icon">
-                                        <i class="fas fa-eye"></i>
-                                    </div>
-                                    <h5>Graph Attention Network</h5>
-                                    <p>Multi-head attention mechanism for adaptive feature importance</p>
-                                    <div class="tech-details">
-                                        <span class="tech-tag">8 Attention Heads</span>
-                                        <span class="tech-tag">Dropout 0.3</span>
-                                        <span class="tech-tag">Feature Weighting</span>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="col-lg-4 col-md-12">
-                                <div class="architecture-card fusion-card">
-                                    <div class="card-icon">
-                                        <i class="fas fa-compress-arrows-alt"></i>
-                                    </div>
-                                    <h5>Hybrid Fusion Layer</h5>
-                                    <p>Intelligent combination of GCN and GAT outputs with uncertainty estimation</p>
-                                    <div class="tech-details">
-                                        <span class="tech-tag">Attention Fusion</span>
-                                        <span class="tech-tag">Uncertainty Quantification</span>
-                                        <span class="tech-tag">Clinical Interpretation</span>
-                                    </div>
-                                </div>
+                <!-- Architecture Overview -->
+                <div class="architecture-diagram">
+                    <h4 class="mb-4"><i class="fas fa-sitemap me-2"></i>Hybrid GNN Architecture</h4>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="text-center">
+                                <i class="fas fa-tree" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                                <h5>Graph Convolutional Network (GCN)</h5>
+                                <p class="small">Captures local neighbourhood patterns in patient similarity graphs</p>
                             </div>
                         </div>
-                        
-                        <div class="architecture-flow-diagram">
-                            <div class="flow-step">
-                                <div class="step-box input-step">
-                                    <i class="fas fa-database"></i>
-                                    <span>Patient Data</span>
-                                </div>
-                                <div class="flow-arrow">→</div>
-                                <div class="step-box graph-step">
-                                    <i class="fas fa-share-alt"></i>
-                                    <span>Graph Construction</span>
-                                </div>
-                                <div class="flow-arrow">→</div>
-                                <div class="step-box parallel-step">
-                                    <div class="parallel-branch">
-                                        <div class="branch-item gcn-branch">
-                                            <i class="fas fa-project-diagram"></i>
-                                            <span>GCN</span>
-                                        </div>
-                                        <div class="branch-item gat-branch">
-                                            <i class="fas fa-eye"></i>
-                                            <span>GAT</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="flow-arrow">→</div>
-                                <div class="step-box fusion-step">
-                                    <i class="fas fa-compress-arrows-alt"></i>
-                                    <span>Fusion</span>
-                                </div>
-                                <div class="flow-arrow">→</div>
-                                <div class="step-box output-step">
-                                    <i class="fas fa-stethoscope"></i>
-                                    <span>Diagnosis</span>
-                                </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="text-center">
+                                <i class="fas fa-balance-scale" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                                <h5>Fusion Layer</h5>
+                                <p class="small">Attention -based combination of GCN and GAT outputs</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="text-center">
+                                <i class="fas fa-cogs" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                                <h5>Graph Attention Network (GAT)</h5>
+                                <p class="small">Learns adaptive attention weights for relevant patient features</p>
                             </div>
                         </div>
                     </div>
@@ -851,11 +411,11 @@
                                 <table class="table table-sm">
                                     <tr>
                                         <td><strong>Model Type:</strong></td>
-                                        <td>{{ model_info.model_type|upper if model_info.model_type else 'Hybrid GNN' }}</td>
+                                        <td>{{ model_info.model_type|upper if model_info.model_type else 'XGBoost Classifier' }}</td>
                                     </tr>
                                     <tr>
                                         <td><strong>Architecture:</strong></td>
-                                        <td>{{ model_info.architecture if model_info.architecture else 'GCN + GAT Fusion' }}</td>
+                                        <td>{{ model_info.architecture if model_info.architecture else 'Gradient Boosting' }}</td>
                                     </tr>
                                     <tr>
                                         <td><strong>Device:</strong></td>
@@ -888,7 +448,7 @@
                                     </tr>
                                     <tr>
                                         <td><strong>Balancing Method:</strong></td>
-                                        <td>SMOTEENN + Focal Loss</td>
+                                        <td>SMOTE-Tomek + Cost-Sensitive</td>
                                     </tr>
                                     <tr>
                                         <td><strong>Feature Engineering:</strong></td>
@@ -922,16 +482,16 @@
                     <div class="row">
                         <div class="col-md-6">
                             <ul class="list-unstyled">
-                                <li><i class="fas fa-check text-success me-2"></i><strong>Class Imbalance:</strong> SMOTEENN sampling with Focal Loss</li>
-                                <li><i class="fas fa-check text-success me-2"></i><strong>Graph Construction:</strong> K-NN similarity graphs with clinical features</li>
-                                <li><i class="fas fa-check text-success me-2"></i><strong>Attention Mechanism:</strong> Multi-head attention for feature importance</li>
+                                <li><i class="fas fa-check text-success me-2"></i><strong>Class Imbalance:</strong> SMOTE-Tomek sampling with cost-sensitive learning</li>
+                                <li><i class="fas fa-check text-success me-2"></i><strong>Feature Engineering:</strong> Composite medical features and risk scores</li>
+                                <li><i class="fas fa-check text-success me-2"></i><strong>Hyperparameter Tuning:</strong> Optimized for medical diagnosis</li>
                             </ul>
                         </div>
                         <div class="col-md-6">
                             <ul class="list-unstyled">
-                                <li><i class="fas fa-check text-success me-2"></i><strong>Training Strategy:</strong> 200 epochs with early stopping</li>
-                                <li><i class="fas fa-check text-success me-2"></i><strong>Optimization:</strong> AdamW optimizer with learning rate scheduling</li>
-                                <li><i class="fas fa-check text-success me-2"></i><strong>Regularization:</strong> Dropout and residual connections</li>
+                                <li><i class="fas fa-check text-success me-2"></i><strong>Early Stopping:</strong> Validation-based with patience</li>
+                                <li><i class="fas fa-check text-success me-2"></i><strong>Cross-Validation:</strong> Stratified K-fold validation</li>
+                                <li><i class="fas fa-check text-success me-2"></i><strong>Regularization:</strong> L1/L2 regularization for generalization</li>
                             </ul>
                         </div>
                     </div>
@@ -966,21 +526,21 @@
                         <div class="col-md-6">
                             <h6>Minimum Requirements:</h6>
                             <ul class="small">
-                                <li>Python 3.10+</li>
-                                <li>PyTorch 2.0+</li>
-                                <li>PyTorch Geometric 2.3+</li>
-                                <li>8GB RAM</li>
-                                <li>GPU: CUDA-compatible (recommended)</li>
+                                <li>Python 3.8+</li>
+                                <li>XGBoost 1.7+</li>
+                                <li>Scikit-learn 1.3+</li>
+                                <li>4GB RAM</li>
+                                <li>CPU: Intel i5 or equivalent</li>
                             </ul>
                         </div>
                         <div class="col-md-6">
                             <h6>Recommended:</h6>
                             <ul class="small">
-                                <li>Python 3.11+</li>
-                                <li>Latest PyTorch + PyG</li>
-                                <li>16GB+ RAM</li>
-                                <li>NVIDIA RTX GPU</li>
-                                <li>NVMe SSD storage</li>
+                                <li>Python 3.10+</li>
+                                <li>Latest XGBoost</li>
+                                <li>8GB+ RAM</li>
+                                <li>Multi-core CPU</li>
+                                <li>SSD storage</li>
                             </ul>
                         </div>
                     </div>
