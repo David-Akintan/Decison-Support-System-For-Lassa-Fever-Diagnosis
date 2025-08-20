@@ -160,8 +160,8 @@ class ClinicalLoss(torch.nn.Module):
 # ---------- Enhanced Training Function ----------
 def enhanced_train_v2(
     csv_path,
-    model_out="model_improved.pth",
-    preprocess_out="preproc_improved.pkl",
+    model_out="model.pth",
+    preprocess_out="preproc.pkl",
     k=8,  # Reduced k for better generalization
     epochs=200,
     lr=5e-4,  # Lower learning rate
@@ -463,8 +463,8 @@ def enhanced_train_v2(
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Enhanced GNN Training v2")
     parser.add_argument("--csv", type=str, default="./sample-data.csv")
-    parser.add_argument("--model_out", type=str, default="model_improved.pth")
-    parser.add_argument("--preprocess_out", type=str, default="preproc_improved.pkl")
+    parser.add_argument("--model_out", type=str, default="model.pth")
+    parser.add_argument("--preprocess_out", type=str, default="preproc.pkl")
     parser.add_argument("--epochs", type=int, default=200)
     parser.add_argument("--lr", type=float, default=5e-4)
     parser.add_argument("--model_type", type=str, default="hybrid", choices=["gcn", "gat", "hybrid"])
