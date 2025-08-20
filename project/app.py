@@ -13,12 +13,12 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
-from models import HybridGNN, GCNNet, GATNet
+from .models import HybridGNN, GCNNet, GATNet
 # from preprocess import build_feature_set  # Not needed for enhanced app
 import torch.nn.functional as F
 from sklearn.metrics import confusion_matrix, classification_report, roc_curve, auc
 from werkzeug.utils import secure_filename
-from database import DatabaseManager
+from .database import DatabaseManager
 
 app = Flask(__name__)
 app.secret_key = 'lassa_fever_decision_support_2024'
