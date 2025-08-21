@@ -1,3 +1,4 @@
 .env
 venv
-
+model.pth
+preproc.pkl
