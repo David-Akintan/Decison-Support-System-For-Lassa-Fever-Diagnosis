@@ -11,8 +11,8 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.optim.lr_scheduler import ReduceLROnPlateau, CosineAnnealingWarmRestarts
 from torch_geometric.data import Data
-from .preprocess import df_to_pyg_data
-from .models import GCNNet, GATNet, HybridGNN
+from preprocess import df_to_pyg_data
+from models import GCNNet, GATNet, HybridGNN
 from sklearn.metrics import f1_score, precision_score, recall_score
 from sklearn.utils.class_weight import compute_class_weight
 from imblearn.over_sampling import SMOTE, ADASYN
